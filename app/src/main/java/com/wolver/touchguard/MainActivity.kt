@@ -23,6 +23,10 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var prefManager: PrefManager
 
+    private lateinit var tvCurrentVersionBadge: TextView
+    private lateinit var tvUpdateStatus: TextView
+    private lateinit var btnCheckUpdate: Button
+
     private lateinit var tvServiceStatus: TextView
     private lateinit var btnOpenAppInfo: Button
     private lateinit var btnOpenAccessibility: Button
@@ -73,6 +77,9 @@ class MainActivity : AppCompatActivity() {
         prefManager = PrefManager(this)
         bindViews()
         setupListeners()
+
+        // Background update check on startup
+        checkAppUpdates(showToastIfLatest = false)
     }
 
     override fun onResume() {
@@ -82,6 +89,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun bindViews() {
+        tvCurrentVersionBadge = findViewById(R.id.tvCurrentVersionBadge)
+        tvUpdateStatus = findViewById(R.id.tvUpdateStatus)
+        btnCheckUpdate = findViewById(R.id.btnCheckUpdate)
+        tvCurrentVersionBadge.text = "v${BuildConfig.VERSION_NAME}"
+
         tvServiceStatus = findViewById(R.id.tvServiceStatus)
         btnOpenAppInfo = findViewById(R.id.btnOpenAppInfo)
         btnOpenAccessibility = findViewById(R.id.btnOpenAccessibility)
@@ -122,6 +134,31 @@ class MainActivity : AppCompatActivity() {
         btnForceEditMode = findViewById(R.id.btnForceEditMode)
         btnForceLockMode = findViewById(R.id.btnForceLockMode)
         btnResetZones = findViewById(R.id.btnResetZones)
+    }
+
+    private fun checkAppUpdates(showToastIfLatest: Boolean) {
+        tvUpdateStatus.text = "Checking GitHub for updates..."
+        tvUpdateStatus.setTextColor(Color.parseColor("#B0B0B0"))
+
+        UpdateManager.check(this) { info ->
+            if (info == null) {
+                tvUpdateStatus.text = "Could not reach update server. Check internet connection."
+                tvUpdateStatus.setTextColor(Color.parseColor("#FF5252"))
+                if (showToastIfLatest) {
+                    Toast.makeText(this, "Could not check for updates", Toast.LENGTH_SHORT).show()
+                }
+            } else if (info.hasUpdate) {
+                tvUpdateStatus.text = "🚀 New version v${info.latestVersionName} available!"
+                tvUpdateStatus.setTextColor(Color.parseColor("#00E676"))
+                UpdateManager.showUpdateDialog(this, info)
+            } else {
+                tvUpdateStatus.text = "● You are running the latest version (v${BuildConfig.VERSION_NAME})."
+                tvUpdateStatus.setTextColor(Color.parseColor("#00E676"))
+                if (showToastIfLatest) {
+                    Toast.makeText(this, "You're already on the latest version!", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
     }
 
     private fun syncUiWithPrefs() {
@@ -197,6 +234,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupListeners() {
+        btnCheckUpdate.setOnClickListener {
+            checkAppUpdates(showToastIfLatest = true)
+        }
+
         btnOpenAppInfo.setOnClickListener {
             try {
                 val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {

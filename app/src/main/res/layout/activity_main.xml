@@ -25,9 +25,64 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:layout_marginBottom="16dp"
-            android:text="Infinix Note 60 (XOS 16) • Visual Radar, Adjustable Bars &amp; Stealth Guard"
+            android:text="Infinix Note 60 (XOS 16) • Fixed Frames, Live Radar &amp; 1-Click Updates"
             android:textColor="@color/text_secondary"
             android:textSize="13sp" />
+
+        <!-- 0. IN-APP UPDATE SYSTEM (1-CLICK UPDATE) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/card_dark"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:layout_marginBottom="14dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="APP UPDATES &amp; VERSION"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvCurrentVersionBadge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="v2.0.0"
+                    android:textColor="@color/accent_green"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvUpdateStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="Checking for latest version from GitHub..."
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/btnCheckUpdate"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_marginTop="10dp"
+                android:backgroundTint="@color/button_dark"
+                android:text="🔄 Check for Updates Now"
+                android:textAllCaps="false"
+                android:textColor="@color/text_primary"
+                android:textSize="13sp" />
+        </LinearLayout>
 
         <!-- 1. SYSTEM ACCESSIBILITY STATUS -->
         <LinearLayout
@@ -41,7 +96,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="1. SYSTEM ACCESSIBILITY STATUS"
+                android:text="1. ACCESSIBILITY OVERLAY SERVICE"
                 android:textColor="@color/text_secondary"
                 android:textSize="12sp"
                 android:textStyle="bold" />
@@ -109,7 +164,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="2. MASTER ENGINE &amp; TARGET APPS"
+                android:text="2. MASTER ENGINE &amp; TARGET GAMES"
                 android:textColor="@color/text_secondary"
                 android:textSize="12sp"
                 android:textStyle="bold" />
@@ -153,7 +208,7 @@
                 android:textColor="@color/text_primary" />
         </LinearLayout>
 
-        <!-- 3. VIEW & ADJUST BLOCKAGE BARS -->
+        <!-- 3. VIEW & ADJUST BLOCKAGE BARS (FIXED FRAME) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -169,14 +224,6 @@
                 android:textColor="@color/accent_green"
                 android:textSize="13sp"
                 android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="Use this section to view the blockage bars on screen and inside this app, and adjust them directly."
-                android:textColor="@color/text_secondary"
-                android:textSize="12sp" />
 
             <!-- VIEW OPTION: SHOW/HIDE BLOCKAGE BARS ON SCREEN -->
             <androidx.appcompat.widget.SwitchCompat
@@ -196,7 +243,7 @@
                 android:textColor="@color/text_secondary"
                 android:textSize="11sp" />
 
-            <!-- OPTION TO HIDE THE FLOATING TOGGLE PILL -->
+            <!-- OPTION TO SHOW/HIDE THE FLOATING TOGGLE PILL -->
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchShowFloatingToggle"
                 android:layout_width="match_parent"
@@ -221,11 +268,11 @@
                 android:layout_marginBottom="12dp"
                 android:background="@color/card_border" />
 
-            <!-- IN-APP SCREEN RADAR PREVIEW (LANDSCAPE PHONE SCREEN) -->
+            <!-- FIXED RADAR SCREEN FRAME -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="LIVE IN-APP SCREEN PREVIEW (Tap a zone to adjust):"
+                android:text="RADAR MONITOR (FIXED FRAME 20:9):"
                 android:textColor="@color/text_secondary"
                 android:textSize="11sp"
                 android:textStyle="bold" />
@@ -233,7 +280,7 @@
             <com.wolver.touchguard.ScreenRadarView
                 android:id="@+id/radarScreenPreview"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="160dp"
                 android:layout_marginTop="8dp"
                 android:layout_marginBottom="12dp" />
 
@@ -394,7 +441,7 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- 4. DEAD-ZONE TOGGLES & OPACITY -->
+        <!-- 4. ACTIVE SHIELDS & BEHAVIOR -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

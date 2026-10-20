@@ -28,22 +28,26 @@ class ScreenRadarView @JvmOverloads constructor(
         }
 
     var onZoneSelected: ((Int) -> Unit)? = null
-
     var prefManager: PrefManager? = null
 
-    private val bgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#161616")
+    private val outerFramePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.parseColor("#0D0D0D")
+        style = Paint.Style.FILL
+    }
+
+    private val screenBezelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.parseColor("#1C1C1C")
         style = Paint.Style.FILL
     }
 
     private val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#383838")
+        color = Color.parseColor("#333333")
         style = Paint.Style.STROKE
         strokeWidth = 2f * density
     }
 
     private val gridPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#222222")
+        color = Color.parseColor("#262626")
         style = Paint.Style.STROKE
         strokeWidth = 1f * density
         pathEffect = DashPathEffect(floatArrayOf(6f, 6f), 0f)
@@ -62,7 +66,7 @@ class ScreenRadarView @JvmOverloads constructor(
         color = Color.WHITE
         textSize = 10f * density
         isFakeBoldText = true
-        setShadowLayer(3f, 0f, 0f, Color.BLACK)
+        setShadowLayer(4f, 0f, 0f, Color.BLACK)
     }
 
     private val phoneScreenRect = RectF()
@@ -78,22 +82,30 @@ class ScreenRadarView @JvmOverloads constructor(
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val width = MeasureSpec.getSize(widthMeasureSpec)
-        // Maintain roughly 2.1:1 landscape phone aspect ratio
-        val height = (width / 2.15f).toInt()
-        setMeasuredDimension(width, height)
+        val heightMode = MeasureSpec.getMode(heightMeasureSpec)
+        val heightSize = MeasureSpec.getSize(heightMeasureSpec)
+
+        val desiredHeight = if (heightMode == MeasureSpec.EXACTLY) {
+            heightSize
+        } else {
+            // Keep a clean fixed 20:9 phone aspect ratio (approx 2.2:1)
+            (width / 2.2f).toInt().coerceIn((140f * density).toInt(), (220f * density).toInt())
+        }
+        setMeasuredDimension(width, desiredHeight)
     }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
-        val pad = 8f * density
-        phoneScreenRect.set(pad, pad, width - pad, height - pad)
+        val padX = 6f * density
+        val padY = 6f * density
+        phoneScreenRect.set(padX, padY, width - padX, height - padY)
 
-        // Draw phone screen background
-        canvas.drawRoundRect(phoneScreenRect, 14f * density, 14f * density, bgPaint)
-        canvas.drawRoundRect(phoneScreenRect, 14f * density, 14f * density, borderPaint)
+        // Draw phone bezel
+        canvas.drawRoundRect(phoneScreenRect, 12f * density, 12f * density, screenBezelPaint)
+        canvas.drawRoundRect(phoneScreenRect, 12f * density, 12f * density, borderPaint)
 
-        // Draw center dashed crosshairs for screen orientation
+        // Draw center screen alignment crosshair lines
         val midX = phoneScreenRect.centerX()
         val midY = phoneScreenRect.centerY()
         canvas.drawLine(midX, phoneScreenRect.top, midX, phoneScreenRect.bottom, gridPaint)
@@ -115,10 +127,10 @@ class ScreenRadarView @JvmOverloads constructor(
         // Draw selected zone on top
         drawZoneOnRadar(canvas, prefs, selectedZoneId, scaleX, scaleY, isSelected = true)
 
-        // Screen bezel label
-        labelPaint.color = Color.parseColor("#777777")
-        labelPaint.textSize = 9f * density
-        canvas.drawText("SCREEN PREVIEW (LANDSCAPE)", phoneScreenRect.left + 10f * density, phoneScreenRect.top + 16f * density, labelPaint)
+        // Screen watermark text
+        labelPaint.color = Color.parseColor("#555555")
+        labelPaint.textSize = 8.5f * density
+        canvas.drawText("SCREEN MONITOR 2644x1208", phoneScreenRect.left + 8f * density, phoneScreenRect.top + 14f * density, labelPaint)
     }
 
     private fun drawZoneOnRadar(
@@ -140,24 +152,24 @@ class ScreenRadarView @JvmOverloads constructor(
         zoneRect.set(left, top, right, bottom)
 
         if (isSelected) {
-            zoneFillPaint.color = Color.argb(160, 255, 23, 68)
+            zoneFillPaint.color = Color.argb(175, 255, 23, 68)
             zoneStrokePaint.color = Color.parseColor("#FFFF1744")
             zoneStrokePaint.strokeWidth = 2.5f * density
         } else {
-            zoneFillPaint.color = Color.argb(80, 41, 121, 255)
-            zoneStrokePaint.color = Color.parseColor("#662979FF")
+            zoneFillPaint.color = Color.argb(85, 41, 121, 255)
+            zoneStrokePaint.color = Color.parseColor("#882979FF")
             zoneStrokePaint.strokeWidth = 1.5f * density
         }
 
-        canvas.drawRoundRect(zoneRect, 4f * density, 4f * density, zoneFillPaint)
-        canvas.drawRoundRect(zoneRect, 4f * density, 4f * density, zoneStrokePaint)
+        canvas.drawRoundRect(zoneRect, 3f * density, 3f * density, zoneFillPaint)
+        canvas.drawRoundRect(zoneRect, 3f * density, 3f * density, zoneStrokePaint)
 
-        // Draw zone label
-        labelPaint.color = if (isSelected) Color.WHITE else Color.parseColor("#DDDDDD")
-        labelPaint.textSize = 10f * density
+        // Draw zone badge
+        labelPaint.color = if (isSelected) Color.WHITE else Color.parseColor("#CCCCCC")
+        labelPaint.textSize = 9.5f * density
         val text = "Z$zoneId"
-        val textX = (zoneRect.left + 4f * density).coerceAtMost(phoneScreenRect.right - 24f * density)
-        val textY = (zoneRect.top + 14f * density).coerceAtMost(phoneScreenRect.bottom - 4f * density)
+        val textX = (zoneRect.left + 3f * density).coerceAtMost(phoneScreenRect.right - 22f * density)
+        val textY = (zoneRect.top + 12f * density).coerceAtMost(phoneScreenRect.bottom - 4f * density)
         canvas.drawText(text, textX, textY, labelPaint)
     }
 
@@ -178,10 +190,10 @@ class ScreenRadarView @JvmOverloads constructor(
                 val bottom = top + (cfg.height * scaleY)
 
                 val hitRect = RectF(
-                    left - 10f * density,
-                    top - 10f * density,
-                    right + 10f * density,
-                    bottom + 10f * density
+                    left - 12f * density,
+                    top - 12f * density,
+                    right + 12f * density,
+                    bottom + 12f * density
                 )
 
                 if (hitRect.contains(event.x, event.y)) {

@@ -1,0 +1,6 @@
+{
+  "versionCode": 3,
+  "versionName": "2.0.0",
+  "downloadUrl": "https://github.com/Wolverh/WolverTouchGuard/releases/download/latest/app-debug.apk",
+  "changelog": "v2.0.0 Fresh Package: Fixed UI frames, in-app update checker with 1-click update, visual live screen radar, and toggle touch-through fix."
+}
