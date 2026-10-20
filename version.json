@@ -1,6 +1,6 @@
 {
-  "versionCode": 3,
-  "versionName": "2.0.0",
+  "versionCode": 4,
+  "versionName": "2.1.0",
   "downloadUrl": "https://github.com/Wolverh/WolverTouchGuard/releases/download/latest/app-debug.apk",
-  "changelog": "v2.0.0 Fresh Package: Fixed UI frames, in-app update checker with 1-click update, visual live screen radar, and toggle touch-through fix."
+  "changelog": "v2.1.0: Tap the floating toggle to open Quick Menu with [🚫 HIDE THIS TOGGLE] button, persistent data backup (never lose your zone sizes on update), and fixed touch handling."
 }

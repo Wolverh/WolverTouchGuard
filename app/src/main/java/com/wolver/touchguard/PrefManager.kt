@@ -2,6 +2,9 @@ package com.wolver.touchguard
 
 import android.content.Context
 import android.content.SharedPreferences
+import org.json.JSONArray
+import org.json.JSONObject
+import java.io.File
 
 data class ZoneConfig(
     val id: Int,
@@ -13,13 +16,14 @@ data class ZoneConfig(
     var height: Int
 )
 
-class PrefManager(context: Context) {
+class PrefManager(private val context: Context) {
 
     private val prefs: SharedPreferences =
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
     companion object {
         private const val PREFS_NAME = "wolver_touch_guard_prefs"
+        private const val BACKUP_FILENAME = "wolver_touchguard_backup.json"
 
         const val MODE_LOCK = 0
         const val MODE_EDIT = 1
@@ -48,13 +52,26 @@ class PrefManager(context: Context) {
         )
     }
 
+    init {
+        // Automatic restore from backup file if SharedPreferences are empty (e.g. after update or re-install)
+        if (!prefs.contains(KEY_MASTER_ENABLED)) {
+            restoreBackupFromFile()
+        }
+    }
+
     var isMasterEnabled: Boolean
         get() = prefs.getBoolean(KEY_MASTER_ENABLED, true)
-        set(value) = prefs.edit().putBoolean(KEY_MASTER_ENABLED, value).apply()
+        set(value) {
+            prefs.edit().putBoolean(KEY_MASTER_ENABLED, value).apply()
+            saveBackupToFile()
+        }
 
     var isAppFilterEnabled: Boolean
         get() = prefs.getBoolean(KEY_APP_FILTER_ENABLED, true)
-        set(value) = prefs.edit().putBoolean(KEY_APP_FILTER_ENABLED, value).apply()
+        set(value) {
+            prefs.edit().putBoolean(KEY_APP_FILTER_ENABLED, value).apply()
+            saveBackupToFile()
+        }
 
     var selectedPackages: Set<String>
         get() {
@@ -67,60 +84,85 @@ class PrefManager(context: Context) {
         }
         set(value) {
             prefs.edit().putStringSet(KEY_SELECTED_APPS, HashSet(value)).apply()
+            saveBackupToFile()
         }
 
     var currentMode: Int
         get() = prefs.getInt(KEY_CURRENT_MODE, MODE_EDIT)
-        set(value) = prefs.edit().putInt(KEY_CURRENT_MODE, value).apply()
+        set(value) {
+            prefs.edit().putInt(KEY_CURRENT_MODE, value).apply()
+            saveBackupToFile()
+        }
 
     var editOpacityPercent: Int
         get() = prefs.getInt(KEY_EDIT_OPACITY, 50).coerceIn(15, 95)
-        set(value) = prefs.edit().putInt(KEY_EDIT_OPACITY, value.coerceIn(15, 95)).apply()
+        set(value) {
+            prefs.edit().putInt(KEY_EDIT_OPACITY, value.coerceIn(15, 95)).apply()
+            saveBackupToFile()
+        }
 
     var showLockBorder: Boolean
         get() = prefs.getBoolean(KEY_LOCK_BORDER, false)
-        set(value) = prefs.edit().putBoolean(KEY_LOCK_BORDER, value).apply()
+        set(value) {
+            prefs.edit().putBoolean(KEY_LOCK_BORDER, value).apply()
+            saveBackupToFile()
+        }
 
     var hidePillInLockMode: Boolean
         get() = prefs.getBoolean(KEY_HIDE_PILL_IN_LOCK, false)
-        set(value) = prefs.edit().putBoolean(KEY_HIDE_PILL_IN_LOCK, value).apply()
+        set(value) {
+            prefs.edit().putBoolean(KEY_HIDE_PILL_IN_LOCK, value).apply()
+            saveBackupToFile()
+        }
 
-    /**
-     * Completely hides the floating pill toggle at all times.
-     */
     var hideFloatingToggleAlways: Boolean
         get() = prefs.getBoolean(KEY_HIDE_TOGGLE_ALWAYS, false)
-        set(value) = prefs.edit().putBoolean(KEY_HIDE_TOGGLE_ALWAYS, value).apply()
+        set(value) {
+            prefs.edit().putBoolean(KEY_HIDE_TOGGLE_ALWAYS, value).apply()
+            saveBackupToFile()
+        }
 
-    /**
-     * Option to view / display the blockage bars directly on screen to adjust them.
-     */
     var showOverlayInApp: Boolean
         get() = prefs.getBoolean(KEY_SHOW_OVERLAY_IN_APP, true)
-        set(value) = prefs.edit().putBoolean(KEY_SHOW_OVERLAY_IN_APP, value).apply()
+        set(value) {
+            prefs.edit().putBoolean(KEY_SHOW_OVERLAY_IN_APP, value).apply()
+            saveBackupToFile()
+        }
 
-    /**
-     * Option to show / hide the in-app screen preview visualizer.
-     */
     var showRadarPreview: Boolean
         get() = prefs.getBoolean(KEY_SHOW_RADAR_PREVIEW, true)
-        set(value) = prefs.edit().putBoolean(KEY_SHOW_RADAR_PREVIEW, value).apply()
+        set(value) {
+            prefs.edit().putBoolean(KEY_SHOW_RADAR_PREVIEW, value).apply()
+            saveBackupToFile()
+        }
 
     var isPillHiddenManually: Boolean
         get() = prefs.getBoolean(KEY_PILL_HIDDEN_MANUALLY, false)
-        set(value) = prefs.edit().putBoolean(KEY_PILL_HIDDEN_MANUALLY, value).apply()
+        set(value) {
+            prefs.edit().putBoolean(KEY_PILL_HIDDEN_MANUALLY, value).apply()
+            saveBackupToFile()
+        }
 
     var pillX: Int
         get() = prefs.getInt(KEY_PILL_X, 950)
-        set(value) = prefs.edit().putInt(KEY_PILL_X, value).apply()
+        set(value) {
+            prefs.edit().putInt(KEY_PILL_X, value).apply()
+            saveBackupToFile()
+        }
 
     var pillY: Int
         get() = prefs.getInt(KEY_PILL_Y, 24)
-        set(value) = prefs.edit().putInt(KEY_PILL_Y, value).apply()
+        set(value) {
+            prefs.edit().putInt(KEY_PILL_Y, value).apply()
+            saveBackupToFile()
+        }
 
     var isPillCollapsed: Boolean
         get() = prefs.getBoolean(KEY_PILL_COLLAPSED, false)
-        set(value) = prefs.edit().putBoolean(KEY_PILL_COLLAPSED, value).apply()
+        set(value) {
+            prefs.edit().putBoolean(KEY_PILL_COLLAPSED, value).apply()
+            saveBackupToFile()
+        }
 
     fun isZoneEnabled(zoneId: Int): Boolean {
         val defaultOn = zoneId <= 3
@@ -129,6 +171,7 @@ class PrefManager(context: Context) {
 
     fun setZoneEnabled(zoneId: Int, enabled: Boolean) {
         prefs.edit().putBoolean("zone_${zoneId}_enabled", enabled).apply()
+        saveBackupToFile()
     }
 
     fun getZoneConfig(zoneId: Int): ZoneConfig {
@@ -187,6 +230,7 @@ class PrefManager(context: Context) {
             .putInt("zone_${zoneId}_w", width.coerceAtLeast(40))
             .putInt("zone_${zoneId}_h", height.coerceAtLeast(35))
             .apply()
+        saveBackupToFile()
     }
 
     fun resetZonesToDefaults() {
@@ -205,5 +249,116 @@ class PrefManager(context: Context) {
         editor.putBoolean(KEY_HIDE_TOGGLE_ALWAYS, false)
         editor.putBoolean(KEY_SHOW_OVERLAY_IN_APP, true)
         editor.apply()
+        saveBackupToFile()
+    }
+
+    // ==========================================
+    // PERSISTENT DATA BACKUP & RESTORE SYSTEM
+    // Ensures zone coordinates are NEVER lost on update!
+    // ==========================================
+
+    private fun getBackupFiles(): List<File> {
+        val files = mutableListOf<File>()
+        try {
+            files.add(File(context.filesDir, BACKUP_FILENAME))
+            val extDir = context.getExternalFilesDir(null)
+            if (extDir != null) {
+                files.add(File(extDir, BACKUP_FILENAME))
+            }
+        } catch (_: Exception) {
+        }
+        return files
+    }
+
+    @Synchronized
+    fun saveBackupToFile() {
+        Thread {
+            try {
+                val json = JSONObject()
+                json.put("master_enabled", isMasterEnabled)
+                json.put("app_filter_enabled", isAppFilterEnabled)
+                json.put("edit_opacity", editOpacityPercent)
+                json.put("lock_border", showLockBorder)
+                json.put("hide_toggle_always", hideFloatingToggleAlways)
+                json.put("show_overlay_in_app", showOverlayInApp)
+                json.put("pill_x", pillX)
+                json.put("pill_y", pillY)
+
+                val appsArray = JSONArray()
+                selectedPackages.forEach { appsArray.put(it) }
+                json.put("selected_apps", appsArray)
+
+                val zonesArray = JSONArray()
+                for (id in 1..TOTAL_ZONES) {
+                    val cfg = getZoneConfig(id)
+                    val zObj = JSONObject().apply {
+                        put("id", cfg.id)
+                        put("enabled", cfg.enabled)
+                        put("x", cfg.x)
+                        put("y", cfg.y)
+                        put("w", cfg.width)
+                        put("h", cfg.height)
+                    }
+                    zonesArray.put(zObj)
+                }
+                json.put("zones", zonesArray)
+
+                val content = json.toString(2)
+                for (f in getBackupFiles()) {
+                    f.writeText(content)
+                }
+            } catch (_: Exception) {
+            }
+        }.start()
+    }
+
+    @Synchronized
+    fun restoreBackupFromFile(): Boolean {
+        try {
+            for (f in getBackupFiles()) {
+                if (f.exists() && f.length() > 10) {
+                    val content = f.readText()
+                    val json = JSONObject(content)
+                    val editor = prefs.edit()
+
+                    if (json.has("master_enabled")) {
+                        editor.putBoolean(KEY_MASTER_ENABLED, json.getBoolean("master_enabled"))
+                    }
+                    if (json.has("app_filter_enabled")) {
+                        editor.putBoolean(KEY_APP_FILTER_ENABLED, json.getBoolean("app_filter_enabled"))
+                    }
+                    if (json.has("edit_opacity")) {
+                        editor.putInt(KEY_EDIT_OPACITY, json.getInt("edit_opacity"))
+                    }
+                    if (json.has("hide_toggle_always")) {
+                        editor.putBoolean(KEY_HIDE_TOGGLE_ALWAYS, json.getBoolean("hide_toggle_always"))
+                    }
+                    if (json.has("pill_x")) {
+                        editor.putInt(KEY_PILL_X, json.getInt("pill_x"))
+                    }
+                    if (json.has("pill_y")) {
+                        editor.putInt(KEY_PILL_Y, json.getInt("pill_y"))
+                    }
+
+                    if (json.has("zones")) {
+                        val zonesArray = json.getJSONArray("zones")
+                        for (i in 0 until zonesArray.length()) {
+                            val zObj = zonesArray.getJSONObject(i)
+                            val id = zObj.getInt("id")
+                            editor.putBoolean("zone_${id}_enabled", zObj.getBoolean("enabled"))
+                            editor.putInt("zone_${id}_x", zObj.getInt("x"))
+                            editor.putInt("zone_${id}_y", zObj.getInt("y"))
+                            editor.putInt("zone_${id}_w", zObj.getInt("w"))
+                            editor.putInt("zone_${id}_h", zObj.getInt("h"))
+                        }
+                    }
+
+                    editor.apply()
+                    return true
+                }
+            }
+        } catch (_: Exception) {
+        }
+        return false
     }
 }

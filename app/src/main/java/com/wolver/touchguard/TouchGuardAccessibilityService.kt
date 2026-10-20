@@ -1,6 +1,7 @@
 package com.wolver.touchguard
 
 import android.accessibilityservice.AccessibilityService
+import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.PixelFormat
 import android.os.Build
@@ -39,6 +40,8 @@ class TouchGuardAccessibilityService : AccessibilityService() {
 
     private var pillView: FloatingPillView? = null
     private var pillParams: WindowManager.LayoutParams? = null
+
+    private var menuView: FloatingMenuView? = null
 
     private var currentForegroundPackage: String = ""
     private var overlaysAttached = false
@@ -126,13 +129,20 @@ class TouchGuardAccessibilityService : AccessibilityService() {
         if (volUpPressed && volDownPressed && overlaysAttached) {
             volUpPressed = false
             volDownPressed = false
-            prefManager.isPillHiddenManually = false
-            val nextMode = if (prefManager.currentMode == PrefManager.MODE_LOCK) {
-                PrefManager.MODE_EDIT
+
+            // Vol Up + Vol Down immediately unhides toggle if hidden, or switches modes
+            if (prefManager.hideFloatingToggleAlways || prefManager.isPillHiddenManually) {
+                prefManager.hideFloatingToggleAlways = false
+                prefManager.isPillHiddenManually = false
+                Toast.makeText(this, "Floating toggle unhidden!", Toast.LENGTH_SHORT).show()
             } else {
-                PrefManager.MODE_LOCK
+                val nextMode = if (prefManager.currentMode == PrefManager.MODE_LOCK) {
+                    PrefManager.MODE_EDIT
+                } else {
+                    PrefManager.MODE_LOCK
+                }
+                prefManager.currentMode = nextMode
             }
-            prefManager.currentMode = nextMode
             refreshOverlaysVisibilityAndState()
             return true
         }
@@ -142,6 +152,74 @@ class TouchGuardAccessibilityService : AccessibilityService() {
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         refreshOverlaysVisibilityAndState()
+    }
+
+    private fun showFloatingMenu() {
+        if (menuView != null) return
+
+        val menu = FloatingMenuView(
+            context = this,
+            onLockClicked = {
+                prefManager.currentMode = PrefManager.MODE_LOCK
+                refreshOverlaysVisibilityAndState()
+                Toast.makeText(this, "Lock Mode Active (Touch Blocking ON)", Toast.LENGTH_SHORT).show()
+            },
+            onEditClicked = {
+                prefManager.currentMode = PrefManager.MODE_EDIT
+                prefManager.showOverlayInApp = true
+                refreshOverlaysVisibilityAndState()
+                Toast.makeText(this, "Edit Mode Active (Bars Visible)", Toast.LENGTH_SHORT).show()
+            },
+            onHideToggleClicked = {
+                // Completely hide toggle when chosen from menu
+                prefManager.hideFloatingToggleAlways = true
+                prefManager.isPillHiddenManually = true
+                refreshOverlaysVisibilityAndState()
+                Toast.makeText(
+                    this,
+                    "Floating toggle is now HIDDEN. Re-enable in app or press Vol Up + Vol Down.",
+                    Toast.LENGTH_LONG
+                ).show()
+            },
+            onOpenAppClicked = {
+                try {
+                    val intent = packageManager.getLaunchIntentForPackage(packageName)?.apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    if (intent != null) startActivity(intent)
+                } catch (_: Exception) {
+                }
+            },
+            onDismissClicked = {
+                dismissFloatingMenu()
+            }
+        )
+
+        val params = WindowManager.LayoutParams(
+            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+            PixelFormat.TRANSLUCENT
+        )
+
+        menuView = menu
+        try {
+            windowManager.addView(menu, params)
+        } catch (_: Exception) {
+            menuView = null
+        }
+    }
+
+    private fun dismissFloatingMenu() {
+        menuView?.let {
+            try {
+                if (it.parent != null) windowManager.removeView(it)
+            } catch (_: Exception) {
+            }
+        }
+        menuView = null
     }
 
     private fun createOverlayViews() {
@@ -170,7 +248,7 @@ class TouchGuardAccessibilityService : AccessibilityService() {
                 }
             )
 
-            // Allow touching the toggle even if it is located inside a blocked zone
+            // Touch forwarding: ensures clicking the toggle always works even if inside a blocked zone!
             view.isPillAt = { rawX, rawY ->
                 val pill = pillView
                 if (pill != null && pill.visibility == View.VISIBLE) {
@@ -217,26 +295,22 @@ class TouchGuardAccessibilityService : AccessibilityService() {
 
         val pill = FloatingPillView(
             context = this,
-            onModeCycleClicked = {
-                val nextMode = when (prefManager.currentMode) {
-                    PrefManager.MODE_LOCK -> PrefManager.MODE_EDIT
-                    PrefManager.MODE_EDIT -> PrefManager.MODE_OFF
-                    else -> PrefManager.MODE_LOCK
-                }
-                prefManager.currentMode = nextMode
-                refreshOverlaysVisibilityAndState()
+            onPillTapped = {
+                // Clicking the toggle shows the Quick Menu with [Hide Toggle] option!
+                showFloatingMenu()
             },
             onCollapseToggled = { collapsed ->
                 prefManager.isPillCollapsed = collapsed
                 refreshOverlaysVisibilityAndState()
             },
             onHideCompletelyClicked = {
-                prefManager.currentMode = PrefManager.MODE_LOCK
+                // Clicking ✕ on the pill hides it completely!
+                prefManager.hideFloatingToggleAlways = true
                 prefManager.isPillHiddenManually = true
                 refreshOverlaysVisibilityAndState()
                 Toast.makeText(
                     this,
-                    "Toggle hidden. Re-enable in app or press Vol Up + Vol Down.",
+                    "Floating toggle HIDDEN. Re-enable in app or press Vol Up + Vol Down.",
                     Toast.LENGTH_LONG
                 ).show()
             },
@@ -382,6 +456,7 @@ class TouchGuardAccessibilityService : AccessibilityService() {
 
             if (!activeOverall || shouldHidePill) {
                 pill.visibility = View.GONE
+                dismissFloatingMenu()
             } else {
                 pill.visibility = View.VISIBLE
                 pParams.x = prefManager.pillX
@@ -401,6 +476,7 @@ class TouchGuardAccessibilityService : AccessibilityService() {
     }
 
     private fun removeAllOverlays() {
+        dismissFloatingMenu()
         for ((_, view) in zoneViews) {
             try {
                 if (view.parent != null) windowManager.removeView(view)

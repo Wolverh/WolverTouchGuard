@@ -10,12 +10,12 @@ import android.view.Gravity
 import android.view.MotionEvent
 import android.widget.LinearLayout
 import android.widget.TextView
-import kotlin.math.abs
+import kotlin.math.hypot
 
 @SuppressLint("ViewConstructor")
 class FloatingPillView(
     context: Context,
-    private val onModeCycleClicked: () -> Unit,
+    private val onPillTapped: () -> Unit,
     private val onCollapseToggled: (collapsed: Boolean) -> Unit,
     private val onHideCompletelyClicked: () -> Unit,
     private val onPositionMoved: (x: Int, y: Int) -> Unit
@@ -42,13 +42,13 @@ class FloatingPillView(
         gravity = Gravity.CENTER_VERTICAL
 
         val bg = GradientDrawable().apply {
-            setColor(Color.parseColor("#DD0A0A0A"))
+            setColor(Color.parseColor("#EE121212"))
             cornerRadius = 20f * density
-            setStroke((1.5f * density).toInt(), Color.parseColor("#66FFFFFF"))
+            setStroke((1.5f * density).toInt(), Color.parseColor("#88FFFFFF"))
         }
         background = bg
-        val padH = (10 * density).toInt()
-        val padV = (5 * density).toInt()
+        val padH = (12 * density).toInt()
+        val padV = (6 * density).toInt()
         setPadding(padH, padV, padH, padV)
 
         tvDragAndStatus = TextView(context).apply {
@@ -61,11 +61,12 @@ class FloatingPillView(
 
         tvCollapseBtn = TextView(context).apply {
             text = " – "
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
             typeface = Typeface.DEFAULT_BOLD
             setTextColor(Color.parseColor("#B0B0B0"))
             gravity = Gravity.CENTER
-            setPadding((6 * density).toInt(), (2 * density).toInt(), (4 * density).toInt(), (2 * density).toInt())
+            val p = (6 * density).toInt()
+            setPadding(p, 0, p, 0)
             setOnClickListener {
                 isCollapsed = !isCollapsed
                 applyVisualState()
@@ -75,11 +76,12 @@ class FloatingPillView(
 
         tvHideFullBtn = TextView(context).apply {
             text = " ✕ "
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
             typeface = Typeface.DEFAULT_BOLD
             setTextColor(Color.parseColor("#FF5252"))
             gravity = Gravity.CENTER
-            setPadding((4 * density).toInt(), (2 * density).toInt(), (4 * density).toInt(), (2 * density).toInt())
+            val p = (6 * density).toInt()
+            setPadding(p, 0, p, 0)
             setOnClickListener {
                 onHideCompletelyClicked()
             }
@@ -95,12 +97,10 @@ class FloatingPillView(
 
     @SuppressLint("ClickableViewAccessibility")
     private fun setupTouchHandling() {
-        val touchListener = OnTouchListener { _, event ->
+        // Touch handling is focused on the status label / pill drag area
+        tvDragAndStatus.setOnTouchListener { _, event ->
             handlePillTouch(event)
         }
-
-        setOnTouchListener(touchListener)
-        tvDragAndStatus.setOnTouchListener(touchListener)
     }
 
     private fun handlePillTouch(event: MotionEvent): Boolean {
@@ -115,15 +115,15 @@ class FloatingPillView(
             }
 
             MotionEvent.ACTION_MOVE -> {
-                val dx = (event.rawX - downRawX).toInt()
-                val dy = (event.rawY - downRawY).toInt()
-                if (abs(dx) > (6 * density) || abs(dy) > (6 * density)) {
+                val dx = event.rawX - downRawX
+                val dy = event.rawY - downRawY
+                if (hypot(dx, dy) > (10 * density)) {
                     isDragging = true
                 }
                 if (isDragging) {
                     val metrics = resources.displayMetrics
-                    posX = (startX + dx).coerceIn(0, (metrics.widthPixels - width).coerceAtLeast(0))
-                    posY = (startY + dy).coerceIn(0, (metrics.heightPixels - height).coerceAtLeast(0))
+                    posX = (startX + dx.toInt()).coerceIn(0, (metrics.widthPixels - width).coerceAtLeast(0))
+                    posY = (startY + dy.toInt()).coerceIn(0, (metrics.heightPixels - height).coerceAtLeast(0))
                     onPositionMoved(posX, posY)
                 }
                 return true
@@ -136,7 +136,8 @@ class FloatingPillView(
                         applyVisualState()
                         onCollapseToggled(false)
                     } else {
-                        onModeCycleClicked()
+                        // Single click on the toggle opens the Quick Menu with the Hide Option!
+                        onPillTapped()
                     }
                 }
                 isDragging = false
@@ -163,8 +164,8 @@ class FloatingPillView(
         if (isCollapsed) {
             tvCollapseBtn.visibility = GONE
             tvHideFullBtn.visibility = GONE
-            tvDragAndStatus.text = "WG"
-            alpha = 0.50f
+            tvDragAndStatus.text = "WG ⚙"
+            alpha = 0.65f
             when (currentMode) {
                 PrefManager.MODE_LOCK -> tvDragAndStatus.setTextColor(Color.parseColor("#00E676"))
                 PrefManager.MODE_EDIT -> tvDragAndStatus.setTextColor(Color.parseColor("#FF1744"))
@@ -173,20 +174,20 @@ class FloatingPillView(
             return
         }
 
-        alpha = 0.92f
+        alpha = 0.95f
         tvCollapseBtn.visibility = VISIBLE
         tvHideFullBtn.visibility = VISIBLE
         when (currentMode) {
             PrefManager.MODE_LOCK -> {
-                tvDragAndStatus.text = "LOCKED"
+                tvDragAndStatus.text = "LOCKED ⚙"
                 tvDragAndStatus.setTextColor(Color.parseColor("#00E676"))
             }
             PrefManager.MODE_EDIT -> {
-                tvDragAndStatus.text = "EDIT ZONES"
+                tvDragAndStatus.text = "EDIT ⚙"
                 tvDragAndStatus.setTextColor(Color.parseColor("#FF1744"))
             }
             PrefManager.MODE_OFF -> {
-                tvDragAndStatus.text = "GUARD OFF"
+                tvDragAndStatus.text = "GUARD OFF ⚙"
                 tvDragAndStatus.setTextColor(Color.parseColor("#9E9E9E"))
             }
         }
