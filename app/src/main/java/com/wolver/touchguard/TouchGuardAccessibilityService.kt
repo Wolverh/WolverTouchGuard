@@ -6,6 +6,7 @@ import android.graphics.PixelFormat
 import android.os.Build
 import android.view.Gravity
 import android.view.KeyEvent
+import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
@@ -84,8 +85,15 @@ class TouchGuardAccessibilityService : AccessibilityService() {
                 for (win in interactiveWindows) {
                     if (win.type == AccessibilityWindowInfo.TYPE_APPLICATION) {
                         val pkg = win.root?.packageName?.toString().orEmpty()
+                        if (pkg == packageName) {
+                            return pkg
+                        }
+                    }
+                }
+                for (win in interactiveWindows) {
+                    if (win.type == AccessibilityWindowInfo.TYPE_APPLICATION) {
+                        val pkg = win.root?.packageName?.toString().orEmpty()
                         if (pkg.isNotEmpty() &&
-                            pkg != packageName &&
                             !IGNORED_TRANSIENT_PACKAGES.contains(pkg)
                         ) {
                             return pkg
@@ -98,7 +106,6 @@ class TouchGuardAccessibilityService : AccessibilityService() {
 
         val eventPkg = event.packageName?.toString().orEmpty()
         if (eventPkg.isNotEmpty() &&
-            eventPkg != packageName &&
             !IGNORED_TRANSIENT_PACKAGES.contains(eventPkg)
         ) {
             return eventPkg
@@ -163,6 +170,34 @@ class TouchGuardAccessibilityService : AccessibilityService() {
                 }
             )
 
+            // Allow touching the toggle even if it is located inside a blocked zone
+            view.isPillAt = { rawX, rawY ->
+                val pill = pillView
+                if (pill != null && pill.visibility == View.VISIBLE) {
+                    val loc = IntArray(2)
+                    pill.getLocationOnScreen(loc)
+                    val pLeft = loc[0].toFloat()
+                    val pTop = loc[1].toFloat()
+                    val pRight = pLeft + pill.width.toFloat()
+                    val pBottom = pTop + pill.height.toFloat()
+                    rawX in pLeft..pRight && rawY in pTop..pBottom
+                } else {
+                    false
+                }
+            }
+
+            view.onPillTouchForward = { ev ->
+                val pill = pillView
+                if (pill != null && pill.visibility == View.VISIBLE) {
+                    val loc = IntArray(2)
+                    pill.getLocationOnScreen(loc)
+                    val copy = MotionEvent.obtain(ev)
+                    copy.setLocation(ev.rawX - loc[0].toFloat(), ev.rawY - loc[1].toFloat())
+                    pill.dispatchTouchEvent(copy)
+                    copy.recycle()
+                }
+            }
+
             val params = createBaseLayoutParams(
                 x = config.x,
                 y = config.y,
@@ -201,7 +236,7 @@ class TouchGuardAccessibilityService : AccessibilityService() {
                 refreshOverlaysVisibilityAndState()
                 Toast.makeText(
                     this,
-                    "Stealth Lock Active (100% Hidden). Press Vol Up + Vol Down together to unhide.",
+                    "Toggle hidden. Re-enable in app or press Vol Up + Vol Down.",
                     Toast.LENGTH_LONG
                 ).show()
             },
@@ -286,15 +321,18 @@ class TouchGuardAccessibilityService : AccessibilityService() {
         val masterOn = prefManager.isMasterEnabled
         val filterOn = prefManager.isAppFilterEnabled
         val allowedPackages = prefManager.selectedPackages
+        val mode = prefManager.currentMode
 
-        val shouldShowForCurrentApp = if (!filterOn) {
+        val isSelfApp = (currentForegroundPackage == packageName) || (currentForegroundPackage.isEmpty())
+        val shouldShowForCurrentApp = if (isSelfApp) {
+            prefManager.showOverlayInApp || (mode == PrefManager.MODE_EDIT)
+        } else if (!filterOn) {
             true
         } else {
             currentForegroundPackage.isNotEmpty() && allowedPackages.contains(currentForegroundPackage)
         }
 
         val activeOverall = masterOn && shouldShowForCurrentApp
-        val mode = prefManager.currentMode
         val opacity = prefManager.editOpacityPercent
         val lockBorder = prefManager.showLockBorder
 
@@ -312,7 +350,11 @@ class TouchGuardAccessibilityService : AccessibilityService() {
                 params.width = cfg.width
                 params.height = cfg.height
 
-                params.flags = params.flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE.inv()
+                if (isSelfApp && mode == PrefManager.MODE_LOCK) {
+                    params.flags = params.flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+                } else {
+                    params.flags = params.flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE.inv()
+                }
 
                 view.updateState(
                     x = cfg.x,
@@ -333,11 +375,12 @@ class TouchGuardAccessibilityService : AccessibilityService() {
 
         pillView?.let { pill ->
             val pParams = pillParams ?: return@let
-            val shouldHidePillStealth =
+            val shouldHidePill =
+                prefManager.hideFloatingToggleAlways ||
                 prefManager.isPillHiddenManually ||
-                        (mode == PrefManager.MODE_LOCK && prefManager.hidePillInLockMode)
+                (mode == PrefManager.MODE_LOCK && prefManager.hidePillInLockMode)
 
-            if (!activeOverall || shouldHidePillStealth) {
+            if (!activeOverall || shouldHidePill) {
                 pill.visibility = View.GONE
             } else {
                 pill.visibility = View.VISIBLE

@@ -95,49 +95,60 @@ class FloatingPillView(
 
     @SuppressLint("ClickableViewAccessibility")
     private fun setupTouchHandling() {
-        tvDragAndStatus.setOnTouchListener { _, event ->
-            when (event.actionMasked) {
-                MotionEvent.ACTION_DOWN -> {
-                    downRawX = event.rawX
-                    downRawY = event.rawY
-                    startX = posX
-                    startY = posY
-                    isDragging = false
-                    true
-                }
+        val touchListener = OnTouchListener { _, event ->
+            handlePillTouch(event)
+        }
 
-                MotionEvent.ACTION_MOVE -> {
-                    val dx = (event.rawX - downRawX).toInt()
-                    val dy = (event.rawY - downRawY).toInt()
-                    if (abs(dx) > (6 * density) || abs(dy) > (6 * density)) {
-                        isDragging = true
-                    }
-                    if (isDragging) {
-                        val metrics = resources.displayMetrics
-                        posX = (startX + dx).coerceIn(0, (metrics.widthPixels - width).coerceAtLeast(0))
-                        posY = (startY + dy).coerceIn(0, (metrics.heightPixels - height).coerceAtLeast(0))
-                        onPositionMoved(posX, posY)
-                    }
-                    true
-                }
+        setOnTouchListener(touchListener)
+        tvDragAndStatus.setOnTouchListener(touchListener)
+    }
 
-                MotionEvent.ACTION_UP -> {
-                    if (!isDragging) {
-                        if (isCollapsed) {
-                            isCollapsed = false
-                            applyVisualState()
-                            onCollapseToggled(false)
-                        } else {
-                            onModeCycleClicked()
-                        }
-                    }
-                    isDragging = false
-                    true
-                }
+    private fun handlePillTouch(event: MotionEvent): Boolean {
+        when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                downRawX = event.rawX
+                downRawY = event.rawY
+                startX = posX
+                startY = posY
+                isDragging = false
+                return true
+            }
 
-                else -> false
+            MotionEvent.ACTION_MOVE -> {
+                val dx = (event.rawX - downRawX).toInt()
+                val dy = (event.rawY - downRawY).toInt()
+                if (abs(dx) > (6 * density) || abs(dy) > (6 * density)) {
+                    isDragging = true
+                }
+                if (isDragging) {
+                    val metrics = resources.displayMetrics
+                    posX = (startX + dx).coerceIn(0, (metrics.widthPixels - width).coerceAtLeast(0))
+                    posY = (startY + dy).coerceIn(0, (metrics.heightPixels - height).coerceAtLeast(0))
+                    onPositionMoved(posX, posY)
+                }
+                return true
+            }
+
+            MotionEvent.ACTION_UP -> {
+                if (!isDragging) {
+                    if (isCollapsed) {
+                        isCollapsed = false
+                        applyVisualState()
+                        onCollapseToggled(false)
+                    } else {
+                        onModeCycleClicked()
+                    }
+                }
+                isDragging = false
+                return true
+            }
+
+            MotionEvent.ACTION_CANCEL -> {
+                isDragging = false
+                return true
             }
         }
+        return false
     }
 
     fun updatePillState(mode: Int, collapsed: Boolean, x: Int, y: Int) {

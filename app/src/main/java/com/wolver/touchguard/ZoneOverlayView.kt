@@ -26,6 +26,9 @@ class ZoneOverlayView(
         private const val HANDLE_BOTTOM_RIGHT = 4
     }
 
+    var isPillAt: ((rawX: Float, rawY: Float) -> Boolean)? = null
+    var onPillTouchForward: ((event: MotionEvent) -> Unit)? = null
+
     private var currentMode: Int = PrefManager.MODE_EDIT
     private var editOpacityPercent: Int = 40
     private var showLockBorder: Boolean = false
@@ -157,6 +160,12 @@ class ZoneOverlayView(
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
+        // If the touch falls on the floating toggle pill, forward it immediately so the toggle is clickable
+        if (isPillAt?.invoke(event.rawX, event.rawY) == true) {
+            onPillTouchForward?.invoke(event)
+            return true
+        }
+
         if (currentMode == PrefManager.MODE_LOCK) {
             return true
         }

@@ -31,6 +31,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvSelectedAppsSummary: TextView
     private lateinit var btnSelectApps: Button
 
+    private lateinit var switchViewBarsOnScreen: SwitchCompat
+    private lateinit var switchShowFloatingToggle: SwitchCompat
+    private lateinit var radarScreenPreview: ScreenRadarView
+
     private lateinit var switchZone1: SwitchCompat
     private lateinit var switchZone2: SwitchCompat
     private lateinit var switchZone3: SwitchCompat
@@ -86,6 +90,11 @@ class MainActivity : AppCompatActivity() {
         tvSelectedAppsSummary = findViewById(R.id.tvSelectedAppsSummary)
         btnSelectApps = findViewById(R.id.btnSelectApps)
 
+        switchViewBarsOnScreen = findViewById(R.id.switchViewBarsOnScreen)
+        switchShowFloatingToggle = findViewById(R.id.switchShowFloatingToggle)
+        radarScreenPreview = findViewById(R.id.radarScreenPreview)
+        radarScreenPreview.prefManager = prefManager
+
         switchZone1 = findViewById(R.id.switchZone1)
         switchZone2 = findViewById(R.id.switchZone2)
         switchZone3 = findViewById(R.id.switchZone3)
@@ -120,6 +129,9 @@ class MainActivity : AppCompatActivity() {
         switchAppFilter.isChecked = prefManager.isAppFilterEnabled
         updateSelectedAppsSummaryText()
 
+        switchViewBarsOnScreen.isChecked = prefManager.showOverlayInApp
+        switchShowFloatingToggle.isChecked = !prefManager.hideFloatingToggleAlways
+
         switchZone1.isChecked = prefManager.isZoneEnabled(1)
         switchZone2.isChecked = prefManager.isZoneEnabled(2)
         switchZone3.isChecked = prefManager.isZoneEnabled(3)
@@ -130,13 +142,15 @@ class MainActivity : AppCompatActivity() {
 
         val opacity = prefManager.editOpacityPercent
         seekBarEditOpacity.progress = opacity
-        tvOpacityValue.text = "Edit Mode Red Opacity: $opacity%"
+        tvOpacityValue.text = "Bar Red Opacity: $opacity%"
 
         loadZoneIntoSliders(currentlySelectedZoneForSliders)
+        radarScreenPreview.invalidate()
     }
 
     private fun loadZoneIntoSliders(zoneId: Int) {
         currentlySelectedZoneForSliders = zoneId
+        radarScreenPreview.selectedZoneId = zoneId
         isUpdatingSlidersProgrammatically = true
 
         val buttons = listOf(btnSelectZ1, btnSelectZ2, btnSelectZ3, btnSelectZ4)
@@ -161,6 +175,7 @@ class MainActivity : AppCompatActivity() {
         tvZoneH.text = "Zone Height: ${cfg.height} px"
 
         isUpdatingSlidersProgrammatically = false
+        radarScreenPreview.invalidate()
     }
 
     private fun saveCurrentSliderValuesToZone() {
@@ -177,6 +192,7 @@ class MainActivity : AppCompatActivity() {
         tvZoneH.text = "Zone Height: $newH px"
 
         prefManager.saveZoneBounds(id, newX, newY, newW, newH)
+        radarScreenPreview.invalidate()
         notifyServiceToRefresh()
     }
 
@@ -203,6 +219,7 @@ class MainActivity : AppCompatActivity() {
         switchMasterEnable.setOnCheckedChangeListener { _, isChecked ->
             prefManager.isMasterEnabled = isChecked
             notifyServiceToRefresh()
+            radarScreenPreview.invalidate()
         }
 
         switchAppFilter.setOnCheckedChangeListener { _, isChecked ->
@@ -214,23 +231,48 @@ class MainActivity : AppCompatActivity() {
             showAppSelectionDialog()
         }
 
+        switchViewBarsOnScreen.setOnCheckedChangeListener { _, isChecked ->
+            prefManager.showOverlayInApp = isChecked
+            if (isChecked) {
+                prefManager.currentMode = PrefManager.MODE_EDIT
+            }
+            notifyServiceToRefresh()
+            val msg = if (isChecked) "Blockage bars VISIBLE on screen" else "Blockage bars HIDDEN from screen"
+            Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+        }
+
+        switchShowFloatingToggle.setOnCheckedChangeListener { _, isChecked ->
+            prefManager.hideFloatingToggleAlways = !isChecked
+            notifyServiceToRefresh()
+            val msg = if (isChecked) "Floating toggle visible on screen" else "Floating toggle completely hidden"
+            Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+        }
+
+        radarScreenPreview.onZoneSelected = { zoneId ->
+            loadZoneIntoSliders(zoneId)
+        }
+
         switchZone1.setOnCheckedChangeListener { _, isChecked ->
             prefManager.setZoneEnabled(1, isChecked)
+            radarScreenPreview.invalidate()
             notifyServiceToRefresh()
         }
 
         switchZone2.setOnCheckedChangeListener { _, isChecked ->
             prefManager.setZoneEnabled(2, isChecked)
+            radarScreenPreview.invalidate()
             notifyServiceToRefresh()
         }
 
         switchZone3.setOnCheckedChangeListener { _, isChecked ->
             prefManager.setZoneEnabled(3, isChecked)
+            radarScreenPreview.invalidate()
             notifyServiceToRefresh()
         }
 
         switchZone4.setOnCheckedChangeListener { _, isChecked ->
             prefManager.setZoneEnabled(4, isChecked)
+            radarScreenPreview.invalidate()
             notifyServiceToRefresh()
         }
 
@@ -246,8 +288,8 @@ class MainActivity : AppCompatActivity() {
 
         seekBarEditOpacity.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                val clamped = progress.coerceIn(15, 85)
-                tvOpacityValue.text = "Edit Mode Red Opacity: $clamped%"
+                val clamped = progress.coerceIn(15, 95)
+                tvOpacityValue.text = "Bar Red Opacity: $clamped%"
                 if (fromUser) {
                     prefManager.editOpacityPercent = clamped
                     notifyServiceToRefresh()
@@ -281,22 +323,26 @@ class MainActivity : AppCompatActivity() {
 
         btnForceEditMode.setOnClickListener {
             prefManager.isPillHiddenManually = false
+            prefManager.showOverlayInApp = true
             prefManager.currentMode = PrefManager.MODE_EDIT
+            switchViewBarsOnScreen.isChecked = true
             notifyServiceToRefresh()
-            Toast.makeText(this, "Edit Mode Active & Pill Unhidden", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Bars are now VISIBLE on screen for adjustment", Toast.LENGTH_SHORT).show()
         }
 
         btnForceLockMode.setOnClickListener {
             prefManager.currentMode = PrefManager.MODE_LOCK
+            prefManager.showOverlayInApp = false
+            switchViewBarsOnScreen.isChecked = false
             notifyServiceToRefresh()
-            Toast.makeText(this, "Lock Mode Active (100% Touch Blocking)", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Bars HIDDEN. Active touch blocking enabled.", Toast.LENGTH_SHORT).show()
         }
 
         btnResetZones.setOnClickListener {
             prefManager.resetZonesToDefaults()
             syncUiWithPrefs()
             notifyServiceToRefresh()
-            Toast.makeText(this, "All 4 zones reset & pill unhidden", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "All zones restored to defaults", Toast.LENGTH_SHORT).show()
         }
     }
 

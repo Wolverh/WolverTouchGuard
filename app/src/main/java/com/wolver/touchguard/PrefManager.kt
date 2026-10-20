@@ -34,6 +34,9 @@ class PrefManager(context: Context) {
         private const val KEY_EDIT_OPACITY = "edit_opacity"
         private const val KEY_LOCK_BORDER = "lock_border"
         private const val KEY_HIDE_PILL_IN_LOCK = "hide_pill_in_lock"
+        private const val KEY_HIDE_TOGGLE_ALWAYS = "hide_toggle_always"
+        private const val KEY_SHOW_OVERLAY_IN_APP = "show_overlay_in_app"
+        private const val KEY_SHOW_RADAR_PREVIEW = "show_radar_preview"
         private const val KEY_PILL_HIDDEN_MANUALLY = "pill_hidden_manually"
         private const val KEY_PILL_X = "pill_x"
         private const val KEY_PILL_Y = "pill_y"
@@ -71,8 +74,8 @@ class PrefManager(context: Context) {
         set(value) = prefs.edit().putInt(KEY_CURRENT_MODE, value).apply()
 
     var editOpacityPercent: Int
-        get() = prefs.getInt(KEY_EDIT_OPACITY, 40).coerceIn(15, 85)
-        set(value) = prefs.edit().putInt(KEY_EDIT_OPACITY, value.coerceIn(15, 85)).apply()
+        get() = prefs.getInt(KEY_EDIT_OPACITY, 50).coerceIn(15, 95)
+        set(value) = prefs.edit().putInt(KEY_EDIT_OPACITY, value.coerceIn(15, 95)).apply()
 
     var showLockBorder: Boolean
         get() = prefs.getBoolean(KEY_LOCK_BORDER, false)
@@ -81,6 +84,27 @@ class PrefManager(context: Context) {
     var hidePillInLockMode: Boolean
         get() = prefs.getBoolean(KEY_HIDE_PILL_IN_LOCK, false)
         set(value) = prefs.edit().putBoolean(KEY_HIDE_PILL_IN_LOCK, value).apply()
+
+    /**
+     * Completely hides the floating pill toggle at all times.
+     */
+    var hideFloatingToggleAlways: Boolean
+        get() = prefs.getBoolean(KEY_HIDE_TOGGLE_ALWAYS, false)
+        set(value) = prefs.edit().putBoolean(KEY_HIDE_TOGGLE_ALWAYS, value).apply()
+
+    /**
+     * Option to view / display the blockage bars directly on screen to adjust them.
+     */
+    var showOverlayInApp: Boolean
+        get() = prefs.getBoolean(KEY_SHOW_OVERLAY_IN_APP, true)
+        set(value) = prefs.edit().putBoolean(KEY_SHOW_OVERLAY_IN_APP, value).apply()
+
+    /**
+     * Option to show / hide the in-app screen preview visualizer.
+     */
+    var showRadarPreview: Boolean
+        get() = prefs.getBoolean(KEY_SHOW_RADAR_PREVIEW, true)
+        set(value) = prefs.edit().putBoolean(KEY_SHOW_RADAR_PREVIEW, value).apply()
 
     var isPillHiddenManually: Boolean
         get() = prefs.getBoolean(KEY_PILL_HIDDEN_MANUALLY, false)
@@ -178,6 +202,8 @@ class PrefManager(context: Context) {
         editor.putInt(KEY_PILL_Y, 24)
         editor.putBoolean(KEY_PILL_COLLAPSED, false)
         editor.putBoolean(KEY_PILL_HIDDEN_MANUALLY, false)
+        editor.putBoolean(KEY_HIDE_TOGGLE_ALWAYS, false)
+        editor.putBoolean(KEY_SHOW_OVERLAY_IN_APP, true)
         editor.apply()
     }
 }

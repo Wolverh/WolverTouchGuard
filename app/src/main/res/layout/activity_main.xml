@@ -25,10 +25,11 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:layout_marginBottom="16dp"
-            android:text="Infinix Note 60 (XOS 16) • Full-Screen Adjustable &amp; 100% Stealth Guard"
+            android:text="Infinix Note 60 (XOS 16) • Visual Radar, Adjustable Bars &amp; Stealth Guard"
             android:textColor="@color/text_secondary"
             android:textSize="13sp" />
 
+        <!-- 1. SYSTEM ACCESSIBILITY STATUS -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -96,6 +97,7 @@
             </LinearLayout>
         </LinearLayout>
 
+        <!-- 2. MASTER ENGINE & TARGET APPS -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -117,7 +119,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:layout_marginTop="8dp"
-                android:text="Enable Touch Guard Overlays"
+                android:text="Enable Touch Guard Engine"
                 android:textColor="@color/text_primary"
                 android:textSize="15sp"
                 android:textStyle="bold" />
@@ -127,7 +129,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:layout_marginTop="4dp"
-                android:text="Run ONLY Inside Selected Apps"
+                android:text="Run ONLY Inside Selected Games"
                 android:textColor="@color/text_primary"
                 android:textSize="14sp" />
 
@@ -151,6 +153,7 @@
                 android:textColor="@color/text_primary" />
         </LinearLayout>
 
+        <!-- 3. VIEW & ADJUST BLOCKAGE BARS -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -162,122 +165,82 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="3. DEAD-ZONE SHIELDS &amp; STEALTH HIDING"
-                android:textColor="@color/text_secondary"
-                android:textSize="12sp"
+                android:text="3. VIEW &amp; ADJUST BLOCKAGE BARS"
+                android:textColor="@color/accent_green"
+                android:textSize="13sp"
                 android:textStyle="bold" />
 
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Use this section to view the blockage bars on screen and inside this app, and adjust them directly."
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp" />
+
+            <!-- VIEW OPTION: SHOW/HIDE BLOCKAGE BARS ON SCREEN -->
             <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/switchZone1"
+                android:id="@+id/switchViewBarsOnScreen"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:layout_marginTop="8dp"
-                android:text="Zone 1: Left Edge &amp; Palm Guard"
+                android:text="👁️ View Blockage Bars on Screen"
                 android:textColor="@color/text_primary"
-                android:textSize="14sp" />
-
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/switchZone2"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:text="Zone 2: Top Status Bar &amp; Call Guard"
-                android:textColor="@color/text_primary"
-                android:textSize="14sp" />
-
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/switchZone3"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:text="Zone 3: Area Below 3rd-Finger Button"
-                android:textColor="@color/text_primary"
-                android:textSize="14sp" />
-
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/switchZone4"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:text="Zone 4: Extra Shield (Right of 3rd-Finger / Mid-Screen)"
-                android:textColor="@color/text_primary"
-                android:textSize="14sp" />
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginTop="10dp"
-                android:layout_marginBottom="10dp"
-                android:background="@color/card_border" />
-
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/switchHidePillInLock"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:text="100% Stealth Mode: Hide Floating Pill in Lock Mode"
-                android:textColor="@color/accent_green"
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                android:text="When Stealth Mode is ON (or when you tap ✕ on the pill), both the blocking zones and the control pill become 100% invisible. Press Vol Up + Vol Down together inside the game to unhide."
+                android:text="Turn ON to see the red blockage bars on screen so you can inspect and adjust them. Turn OFF to hide them."
                 android:textColor="@color/text_secondary"
-                android:textSize="12sp" />
+                android:textSize="11sp" />
 
+            <!-- OPTION TO HIDE THE FLOATING TOGGLE PILL -->
             <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/switchLockBorder"
+                android:id="@+id/switchShowFloatingToggle"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
-                android:text="Show 5% Faint Border in Lock Mode (For Testing)"
+                android:layout_marginTop="10dp"
+                android:text="🔘 Show Floating Toggle Button on Screen"
                 android:textColor="@color/text_primary"
-                android:textSize="14sp" />
-
-            <TextView
-                android:id="@+id/tvOpacityValue"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="Edit Mode Red Opacity: 40%"
-                android:textColor="@color/text_primary"
-                android:textSize="13sp" />
-
-            <SeekBar
-                android:id="@+id/seekBarEditOpacity"
-                android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:layout_marginTop="4dp"
-                android:max="85"
-                android:progress="40" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/card_dark"
-            android:orientation="vertical"
-            android:padding="16dp"
-            android:layout_marginBottom="14dp">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="4. EXACT SIZE &amp; POSITION SLIDERS (FULL SCREEN RANGE)"
-                android:textColor="@color/text_secondary"
-                android:textSize="12sp"
+                android:textSize="14sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="Select a zone below to fine-tune its X, Y, Width, and Height across the entire 2644x1208 landscape screen (or drag any of the 4 white corner handles in Edit Mode):"
+                android:text="Turn OFF if the floating toggle button is annoying. You can hide it completely while touch protection stays active!"
                 android:textColor="@color/text_secondary"
-                android:textSize="12sp" />
+                android:textSize="11sp" />
 
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="12dp"
+                android:background="@color/card_border" />
+
+            <!-- IN-APP SCREEN RADAR PREVIEW (LANDSCAPE PHONE SCREEN) -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="LIVE IN-APP SCREEN PREVIEW (Tap a zone to adjust):"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+
+            <com.wolver.touchguard.ScreenRadarView
+                android:id="@+id/radarScreenPreview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="12dp" />
+
+            <!-- ZONE SELECTOR BUTTONS -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
                 android:orientation="horizontal">
 
                 <Button
@@ -287,9 +250,10 @@
                     android:layout_weight="1"
                     android:layout_marginEnd="4dp"
                     android:backgroundTint="@color/accent_red"
-                    android:text="Z1"
+                    android:text="Z1 (Left)"
                     android:textAllCaps="false"
-                    android:textColor="@color/text_primary" />
+                    android:textColor="@color/text_primary"
+                    android:textSize="12sp" />
 
                 <Button
                     android:id="@+id/btnSelectZ2"
@@ -298,9 +262,10 @@
                     android:layout_weight="1"
                     android:layout_marginEnd="4dp"
                     android:backgroundTint="@color/button_dark"
-                    android:text="Z2"
+                    android:text="Z2 (Top)"
                     android:textAllCaps="false"
-                    android:textColor="@color/text_primary" />
+                    android:textColor="@color/text_primary"
+                    android:textSize="12sp" />
 
                 <Button
                     android:id="@+id/btnSelectZ3"
@@ -309,9 +274,10 @@
                     android:layout_weight="1"
                     android:layout_marginEnd="4dp"
                     android:backgroundTint="@color/button_dark"
-                    android:text="Z3"
+                    android:text="Z3 (Mid)"
                     android:textAllCaps="false"
-                    android:textColor="@color/text_primary" />
+                    android:textColor="@color/text_primary"
+                    android:textSize="12sp" />
 
                 <Button
                     android:id="@+id/btnSelectZ4"
@@ -319,9 +285,10 @@
                     android:layout_height="42dp"
                     android:layout_weight="1"
                     android:backgroundTint="@color/button_dark"
-                    android:text="Z4"
+                    android:text="Z4 (Right)"
                     android:textAllCaps="false"
-                    android:textColor="@color/text_primary" />
+                    android:textColor="@color/text_primary"
+                    android:textSize="12sp" />
             </LinearLayout>
 
             <TextView
@@ -334,6 +301,7 @@
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
+            <!-- SLIDERS -->
             <TextView
                 android:id="@+id/tvZoneX"
                 android:layout_width="match_parent"
@@ -393,23 +361,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="38dp"
                 android:max="1208" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/card_dark"
-            android:orientation="vertical"
-            android:padding="16dp"
-            android:layout_marginBottom="24dp">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="5. QUICK MODE &amp; CALIBRATION CONTROLS"
-                android:textColor="@color/text_secondary"
-                android:textSize="12sp"
-                android:textStyle="bold" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -424,7 +375,7 @@
                     android:layout_weight="1"
                     android:layout_marginEnd="6dp"
                     android:backgroundTint="@color/accent_red"
-                    android:text="Edit Mode (Unhide)"
+                    android:text="View &amp; Edit Bars"
                     android:textAllCaps="false"
                     android:textColor="@color/text_primary"
                     android:textStyle="bold" />
@@ -436,11 +387,129 @@
                     android:layout_weight="1"
                     android:layout_marginStart="6dp"
                     android:backgroundTint="@color/accent_green"
-                    android:text="Lock Mode"
+                    android:text="Lock &amp; Hide Bars"
                     android:textAllCaps="false"
                     android:textColor="@color/bg_pure_black"
                     android:textStyle="bold" />
             </LinearLayout>
+        </LinearLayout>
+
+        <!-- 4. DEAD-ZONE TOGGLES & OPACITY -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/card_dark"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:layout_marginBottom="14dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="4. ACTIVE SHIELDS &amp; STEALTH MODE"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switchZone1"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:text="Zone 1: Left Edge &amp; Palm Guard"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switchZone2"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="Zone 2: Top Status Bar &amp; Call Guard"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switchZone3"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="Zone 3: Area Below 3rd-Finger Button"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switchZone4"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="Zone 4: Extra Shield (Right of 3rd-Finger)"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:background="@color/card_border" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switchHidePillInLock"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="Stealth Mode: Hide Toggle in Lock Mode"
+                android:textColor="@color/accent_green"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:text="Press Vol Up + Vol Down together inside game to toggle unhide/hide."
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switchLockBorder"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="Show Faint Border in Lock Mode (For Testing)"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/tvOpacityValue"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="Bar Red Opacity: 50%"
+                android:textColor="@color/text_primary"
+                android:textSize="13sp" />
+
+            <SeekBar
+                android:id="@+id/seekBarEditOpacity"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_marginTop="4dp"
+                android:max="95"
+                android:progress="50" />
+        </LinearLayout>
+
+        <!-- 5. RESET -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/card_dark"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:layout_marginBottom="24dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="5. RESET CONTROLS"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:textStyle="bold" />
 
             <Button
                 android:id="@+id/btnResetZones"
@@ -448,7 +517,7 @@
                 android:layout_height="48dp"
                 android:layout_marginTop="10dp"
                 android:backgroundTint="@color/button_dark"
-                android:text="Reset All Zones &amp; Unhide Pill"
+                android:text="Reset All Zones &amp; Restore Defaults"
                 android:textAllCaps="false"
                 android:textColor="@color/text_primary" />
         </LinearLayout>
