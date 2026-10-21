@@ -149,15 +149,14 @@ object UpdateManager {
         container.addView(tvStatus)
         container.addView(progressBar)
 
-        @Volatile
-        var isCancelled = false
+        val isCancelled = java.util.concurrent.atomic.AtomicBoolean(false)
 
         val progressDialog = AlertDialog.Builder(activity)
             .setTitle("Downloading v${info.latestVersionName}...")
             .setView(container)
             .setCancelable(false)
             .setNegativeButton("Cancel") { dialog, _ ->
-                isCancelled = true
+                isCancelled.set(true)
                 dialog.dismiss()
             }
             .create()
@@ -232,7 +231,7 @@ object UpdateManager {
                 var count: Int
 
                 while (input.read(data).also { count = it } != -1) {
-                    if (isCancelled) {
+                    if (isCancelled.get()) {
                         input.close()
                         output.close()
                         outputFile.delete()
