@@ -1,0 +1,3317 @@
+================================================================================
+          WOLVER TOUCH GUARD - FULL ARCHITECTURE & COMPLETE SOURCE CODE
+================================================================================
+Package ID: com.wolver.touchguard.pro
+Version: 3.0.0 (VersionCode: 5)
+Platform: Android 8.0 (API 26) - Android 16 (API 35+)
+Target Device: Optimized for Infinix Note 60 (XOS 16) & all modern Android devices
+License: Open-Source Project
+
+--------------------------------------------------------------------------------
+1. COMPREHENSIVE APPLICATION DESCRIPTION
+--------------------------------------------------------------------------------
+Wolver Touch Guard is a specialized, hardware-accelerated touch-blocking utility 
+built primarily for mobile gamers (specifically 3-finger, 4-finger claw, and palm 
+grip players in titles such as Free Fire, Free Fire MAX, PUBG, and Call of Duty).
+
+On bezel-less, high-refresh-rate curved displays (like the Infinix Note 60), 
+accidental edge touches, palm sweat, claw fingers brushing the status bar, or 
+fingers straying below weapon/crouch buttons constantly cause misfires, camera 
+freezes, or pull down the Android Notification Drawer during intense firefights.
+
+Wolver Touch Guard eliminates this problem by overlaying customizable, invisible 
+or visible "dead-zone shields" using Android's Accessibility Overlay architecture.
+
+KEY SYSTEM FEATURES:
+1. Four Independent Fully-Adjustable Dead Zones:
+   - Zone 1 (Left Edge & Palm Guard): Blocks palm rejection errors when holding the phone.
+   - Zone 2 (Top Status Bar & Call Guard): Blocks accidental pull-down of notifications, 
+     quick settings, or touching incoming WhatsApp/call banners.
+   - Zone 3 (Below 3rd-Finger Button): Shields the area directly below upper left/right 
+     claw trigger buttons to prevent misclicks.
+   - Zone 4 (Mid-Screen / Auxiliary Shield): Protects around joystick or right-side buttons.
+   Each zone has independent X, Y, Width, and Height controls down to the single pixel.
+
+2. Fixed-Ratio In-App Screen Radar Monitor:
+   - An interactive miniature phone display (20:9 landscape aspect ratio) right inside 
+     MainActivity. As you move the sliders or tap zones, you see the exact positioning 
+     in real-time without leaving the app.
+
+3. Live Screen Overlay (View / Hide Options):
+   - Switch between Edit Mode (red translucent zones with drag handles) and Lock Mode 
+     (100% invisible or faint 5% border, silently blocking touches).
+   - "View Blockage Bars on Screen" toggle allows viewing the overlays directly inside 
+     the configuration app or over games to calibrate them.
+
+4. Interactive Floating Toggle Pill & Quick Action Menu:
+   - A movable, collapsible on-screen badge ("LOCKED", "EDIT", "WG").
+   - Smart Touch-Through: If the toggle is placed inside a blocked dead zone, the shield 
+     detects the touch and immediately forwards it to the toggle, ensuring it is ALWAYS 
+     clickable and never gets trapped in its own dead zone!
+   - Tap-to-Menu: Tapping the toggle opens a sleek Quick Control Menu with:
+     * [Lock Mode]
+     * [Edit Mode]
+     * [🚫 HIDE THIS TOGGLE] (One-click complete stealth)
+     * [Open App Settings]
+     * [Dismiss]
+
+5. Hardware Volume Key Emergency Stealth Toggle:
+   - Pressing Volume Up + Volume Down together inside any game instantly unhides the 
+     toggle or switches between Lock and Edit modes.
+
+6. In-App 1-Click Update System:
+   - Background update checker queries version.json and GitHub Releases.
+   - If an update is released, a dialog pops up with the changelog.
+   - 1-Click direct install without manually browsing GitHub.
+
+7. Permanent Cryptographic Signing Keystore (Zero Package Conflicts):
+   - Signed with permanent release.p12 keystore committed to the project.
+   - Every build on GitHub Actions or local is signed with the exact same key.
+   - Package ID com.wolver.touchguard.pro guarantees clean installs with zero signature 
+     or package conflict errors across all versions.
+
+8. Dual Persistent JSON Settings Backup (Zero Data Loss):
+   - Whenever any zone bound or setting is changed, an automated background thread 
+     syncs settings to an internal JSON backup and external app storage.
+   - Survives app updates and reinstalls automatically.
+
+--------------------------------------------------------------------------------
+2. SETUP & INSTALLATION GUIDE (INFINIX XOS 16 / ANDROID 14+)
+--------------------------------------------------------------------------------
+Step 1: Install the APK (Allow installation from unknown sources).
+Step 2: Grant Restricted Settings (Crucial on Android 13/14/15/16):
+        Go to phone Settings -> Apps -> Wolver Touch Guard.
+        Tap the 3 dots in the top right corner -> Tap "Allow restricted settings".
+Step 3: Set Battery to Unrestricted:
+        Under App Info -> Battery -> Select "Unrestricted" (prevents OS from killing service).
+Step 4: Enable Accessibility:
+        Open Wolver Touch Guard -> Tap "2. Accessibility" -> Enable "Wolver Touch Guard Service".
+
+================================================================================
+3. COMPLETE VERBATIM PROJECT SOURCE CODE
+================================================================================
+
+
+================================================================================
+FILE: settings.gradle.kts
+PATH: C:\Users\Lenovo\WolverTouchGuard\settings.gradle.kts
+================================================================================
+
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.name = "WolverTouchGuard"
+include(":app")
+
+
+================================================================================
+FILE: build.gradle.kts (Project)
+PATH: C:\Users\Lenovo\WolverTouchGuard\build.gradle.kts
+================================================================================
+
+plugins {
+    id("com.android.application") version "8.5.2" apply false
+    id("org.jetbrains.kotlin.android") version "1.9.24" apply false
+}
+
+
+================================================================================
+FILE: gradle.properties
+PATH: C:\Users\Lenovo\WolverTouchGuard\gradle.properties
+================================================================================
+
+org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
+android.useAndroidX=true
+kotlin.code.style=official
+android.nonTransitiveRClass=true
+
+
+================================================================================
+FILE: version.json
+PATH: C:\Users\Lenovo\WolverTouchGuard\version.json
+================================================================================
+
+{
+  "versionCode": 5,
+  "versionName": "3.0.0",
+  "downloadUrl": "https://github.com/Wolverh/WolverTouchGuard/releases/download/latest/app-debug.apk",
+  "changelog": "v3.0.0 Permanent Fixed Keystore: Solved package conflict error permanently with permanent signing key and fresh package com.wolver.touchguard.pro. Future updates update in-place without conflicts."
+}
+
+
+================================================================================
+FILE: .github/workflows/build.yml
+PATH: C:\Users\Lenovo\WolverTouchGuard\.github\workflows\build.yml
+================================================================================
+
+name: Build Wolver Touch Guard APK
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle 8.9
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Compile Debug APK
+        run: gradle assembleDebug --stacktrace
+
+      - name: Upload Ready-to-Install APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: WolverTouchGuard-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Publish GitHub Release (Latest)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete latest --yes || true
+          git tag -d latest || true
+          git push origin :refs/tags/latest || true
+          gh release create latest app/build/outputs/apk/debug/app-debug.apk \
+            --title "Wolver Touch Guard Latest" \
+            --notes "Automatic build supporting one-click in-app updates."
+
+
+================================================================================
+FILE: app/build.gradle.kts
+PATH: C:\Users\Lenovo\WolverTouchGuard\app\build.gradle.kts
+================================================================================
+
+plugins {
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+}
+
+android {
+    namespace = "com.wolver.touchguard"
+    compileSdk = 35
+
+    defaultConfig {
+        applicationId = "com.wolver.touchguard.pro"
+        minSdk = 26
+        targetSdk = 35
+        versionCode = 5
+        versionName = "3.0.0"
+    }
+
+    buildFeatures {
+        buildConfig = true
+    }
+
+    signingConfigs {
+        create("release") {
+            storeFile = file("release.p12")
+            storePassword = "wolver123"
+            keyAlias = "wolver"
+            keyPassword = "wolver123"
+        }
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+        debug {
+            isDebuggable = true
+            signingConfig = signingConfigs.getByName("release")
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+}
+
+dependencies {
+    implementation("androidx.core:core-ktx:1.13.1")
+    implementation("androidx.appcompat:appcompat:1.7.0")
+}
+
+
+================================================================================
+FILE: app/src/main/AndroidManifest.xml
+PATH: C:\Users\Lenovo\WolverTouchGuard\app\src\main\AndroidManifest.xml
+================================================================================
+
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <uses-permission
+        android:name="android.permission.QUERY_ALL_PACKAGES"
+        tools:ignore="QueryAllPackagesPermission" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@drawable/ic_launcher"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.WolverTouchGuard">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <service
+            android:name=".TouchGuardAccessibilityService"
+            android:enabled="true"
+            android:exported="false"
+            android:label="@string/accessibility_service_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
+        </service>
+
+    </application>
+
+</manifest>
+
+
+================================================================================
+FILE: app/src/main/res/xml/accessibility_service_config.xml
+PATH: C:\Users\Lenovo\WolverTouchGuard\app\src\main\res\xml\accessibility_service_config.xml
+================================================================================
+
+<?xml version="1.0" encoding="utf-8"?>
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityEventTypes="typeWindowStateChanged|typeWindowsChanged"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:accessibilityFlags="flagDefault|flagRetrieveInteractiveWindows|flagRequestFilterKeyEvents"
+    android:canPerformGestures="false"
+    android:canRequestFilterKeyEvents="true"
+    android:canRetrieveWindowContent="false"
+    android:description="@string/accessibility_service_description"
+    android:notificationTimeout="50"
+    android:settingsActivity=".MainActivity" />
+
+
+================================================================================
+FILE: app/src/main/res/drawable/ic_launcher.xml
+PATH: C:\Users\Lenovo\WolverTouchGuard\app\src\main\res\drawable\ic_launcher.xml
+================================================================================
+
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#000000"
+        android:pathData="M0,0h108v108h-108z" />
+    <path
+        android:fillColor="#FF1744"
+        android:pathData="M54,18L24,32v26c0,21.5 12.8,41.6 30,48 17.2,-6.4 30,-26.5 30,-48V32L54,18z" />
+    <path
+        android:fillColor="#000000"
+        android:pathData="M54,28L32,38v20c0,16.1 9.4,31.2 22,36 12.6,-4.8 22,-19.9 22,-36V38L54,28z" />
+    <path
+        android:fillColor="#00E676"
+        android:pathData="M48,66l-10,-10 4.2,-4.2 5.8,5.8 15.8,-15.8 4.2,4.2z" />
+</vector>
+
+
+================================================================================
+FILE: app/src/main/res/values/colors.xml
+PATH: C:\Users\Lenovo\WolverTouchGuard\app\src\main\res\values\colors.xml
+================================================================================
+
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg_pure_black">#000000</color>
+    <color name="card_dark">#121212</color>
+    <color name="card_border">#242424</color>
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#B0B0B0</color>
+    <color name="accent_red">#FF1744</color>
+    <color name="accent_green">#00E676</color>
+    <color name="accent_blue">#2979FF</color>
+    <color name="button_dark">#1E1E1E</color>
+</resources>
+
+
+================================================================================
+FILE: app/src/main/res/values/strings.xml
+PATH: C:\Users\Lenovo\WolverTouchGuard\app\src\main\res\values\strings.xml
+================================================================================
+
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Wolver Touch Guard</string>
+    <string name="accessibility_service_label">Wolver Touch Guard Service</string>
+    <string name="accessibility_service_description">Blocks accidental palm, claw-finger, and status bar touches inside selected landscape games such as Free Fire.</string>
+</resources>
+
+
+================================================================================
+FILE: app/src/main/res/values/themes.xml
+PATH: C:\Users\Lenovo\WolverTouchGuard\app\src\main\res\values\themes.xml
+================================================================================
+
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.WolverTouchGuard" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowBackground">@color/bg_pure_black</item>
+        <item name="android:statusBarColor">@color/bg_pure_black</item>
+        <item name="android:navigationBarColor">@color/bg_pure_black</item>
+        <item name="colorPrimary">@color/accent_red</item>
+        <item name="colorPrimaryDark">@color/bg_pure_black</item>
+        <item name="colorAccent">@color/accent_green</item>
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
+    </style>
+</resources>
+
+
+================================================================================
+FILE: app/src/main/res/layout/activity_main.xml
+PATH: C:\Users\Lenovo\WolverTouchGuard\app\src\main\res\layout\activity_main.xml
+================================================================================
+
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_pure_black"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="WOLVER TOUCH GUARD"
+            android:textColor="@color/text_primary"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.05" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="16dp"
+            android:text="Infinix Note 60 (XOS 16) • Fixed Frames, Live Radar &amp; 1-Click Updates"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp" />
+
+        <!-- 0. IN-APP UPDATE SYSTEM (1-CLICK UPDATE) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/card_dark"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:layout_marginBottom="14dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="APP UPDATES &amp; VERSION"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvCurrentVersionBadge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="v2.0.0"
+                    android:textColor="@color/accent_green"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvUpdateStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="Checking for latest version from GitHub..."
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/btnCheckUpdate"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_marginTop="10dp"
+                android:backgroundTint="@color/button_dark"
+                android:text="🔄 Check for Updates Now"
+                android:textAllCaps="false"
+                android:textColor="@color/text_primary"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <!-- 1. SYSTEM ACCESSIBILITY STATUS -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/card_dark"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:layout_marginBottom="14dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="1. ACCESSIBILITY OVERLAY SERVICE"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvServiceStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Checking status..."
+                android:textColor="@color/accent_red"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="On Android 16 / XOS 16: First open App Info -> 3 dots (top right) -> Allow restricted settings, and set Battery to Unrestricted."
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnOpenAppInfo"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="6dp"
+                    android:backgroundTint="@color/button_dark"
+                    android:text="1. App Info"
+                    android:textAllCaps="false"
+                    android:textColor="@color/text_primary"
+                    android:textSize="13sp" />
+
+                <Button
+                    android:id="@+id/btnOpenAccessibility"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="6dp"
+                    android:backgroundTint="@color/accent_red"
+                    android:text="2. Accessibility"
+                    android:textAllCaps="false"
+                    android:textColor="@color/text_primary"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- 2. MASTER ENGINE & TARGET APPS -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/card_dark"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:layout_marginBottom="14dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="2. MASTER ENGINE &amp; TARGET GAMES"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switchMasterEnable"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:text="Enable Touch Guard Engine"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switchAppFilter"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="4dp"
+                android:text="Run ONLY Inside Selected Games"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/tvSelectedAppsSummary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="Selected: com.dts.freefireth, com.dts.freefiremax"
+                android:textColor="@color/accent_green"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/btnSelectApps"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="10dp"
+                android:backgroundTint="@color/button_dark"
+                android:text="Choose Target Games / Apps"
+                android:textAllCaps="false"
+                android:textColor="@color/text_primary" />
+        </LinearLayout>
+
+        <!-- 3. VIEW & ADJUST BLOCKAGE BARS (FIXED FRAME) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/card_dark"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:layout_marginBottom="14dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="3. VIEW &amp; ADJUST BLOCKAGE BARS"
+                android:textColor="@color/accent_green"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <!-- VIEW OPTION: SHOW/HIDE BLOCKAGE BARS ON SCREEN -->
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switchViewBarsOnScreen"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:text="👁️ View Blockage Bars on Screen"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Turn ON to see the red blockage bars on screen so you can inspect and adjust them. Turn OFF to hide them."
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp" />
+
+            <!-- OPTION TO SHOW/HIDE THE FLOATING TOGGLE PILL -->
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switchShowFloatingToggle"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="10dp"
+                android:text="🔘 Show Floating Toggle Button on Screen"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Turn OFF if the floating toggle button is annoying. You can hide it completely while touch protection stays active!"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="12dp"
+                android:background="@color/card_border" />
+
+            <!-- FIXED RADAR SCREEN FRAME -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="RADAR MONITOR (FIXED FRAME 20:9):"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+
+            <com.wolver.touchguard.ScreenRadarView
+                android:id="@+id/radarScreenPreview"
+                android:layout_width="match_parent"
+                android:layout_height="160dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="12dp" />
+
+            <!-- ZONE SELECTOR BUTTONS -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnSelectZ1"
+                    android:layout_width="0dp"
+                    android:layout_height="42dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="4dp"
+                    android:backgroundTint="@color/accent_red"
+                    android:text="Z1 (Left)"
+                    android:textAllCaps="false"
+                    android:textColor="@color/text_primary"
+                    android:textSize="12sp" />
+
+                <Button
+                    android:id="@+id/btnSelectZ2"
+                    android:layout_width="0dp"
+                    android:layout_height="42dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="4dp"
+                    android:backgroundTint="@color/button_dark"
+                    android:text="Z2 (Top)"
+                    android:textAllCaps="false"
+                    android:textColor="@color/text_primary"
+                    android:textSize="12sp" />
+
+                <Button
+                    android:id="@+id/btnSelectZ3"
+                    android:layout_width="0dp"
+                    android:layout_height="42dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="4dp"
+                    android:backgroundTint="@color/button_dark"
+                    android:text="Z3 (Mid)"
+                    android:textAllCaps="false"
+                    android:textColor="@color/text_primary"
+                    android:textSize="12sp" />
+
+                <Button
+                    android:id="@+id/btnSelectZ4"
+                    android:layout_width="0dp"
+                    android:layout_height="42dp"
+                    android:layout_weight="1"
+                    android:backgroundTint="@color/button_dark"
+                    android:text="Z4 (Right)"
+                    android:textAllCaps="false"
+                    android:textColor="@color/text_primary"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvEditingZoneTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="Adjusting: Zone 1"
+                android:textColor="@color/accent_green"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <!-- SLIDERS -->
+            <TextView
+                android:id="@+id/tvZoneX"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Horizontal Position (X): 0 px"
+                android:textColor="@color/text_primary"
+                android:textSize="13sp" />
+
+            <SeekBar
+                android:id="@+id/seekZoneX"
+                android:layout_width="match_parent"
+                android:layout_height="38dp"
+                android:max="2600" />
+
+            <TextView
+                android:id="@+id/tvZoneY"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Vertical Position (Y): 0 px"
+                android:textColor="@color/text_primary"
+                android:textSize="13sp" />
+
+            <SeekBar
+                android:id="@+id/seekZoneY"
+                android:layout_width="match_parent"
+                android:layout_height="38dp"
+                android:max="1200" />
+
+            <TextView
+                android:id="@+id/tvZoneW"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Zone Width: 220 px"
+                android:textColor="@color/text_primary"
+                android:textSize="13sp" />
+
+            <SeekBar
+                android:id="@+id/seekZoneW"
+                android:layout_width="match_parent"
+                android:layout_height="38dp"
+                android:max="2644" />
+
+            <TextView
+                android:id="@+id/tvZoneH"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Zone Height: 600 px"
+                android:textColor="@color/text_primary"
+                android:textSize="13sp" />
+
+            <SeekBar
+                android:id="@+id/seekZoneH"
+                android:layout_width="match_parent"
+                android:layout_height="38dp"
+                android:max="1208" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnForceEditMode"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="6dp"
+                    android:backgroundTint="@color/accent_red"
+                    android:text="View &amp; Edit Bars"
+                    android:textAllCaps="false"
+                    android:textColor="@color/text_primary"
+                    android:textStyle="bold" />
+
+                <Button
+                    android:id="@+id/btnForceLockMode"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="6dp"
+                    android:backgroundTint="@color/accent_green"
+                    android:text="Lock &amp; Hide Bars"
+                    android:textAllCaps="false"
+                    android:textColor="@color/bg_pure_black"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- 4. ACTIVE SHIELDS & BEHAVIOR -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/card_dark"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:layout_marginBottom="14dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="4. ACTIVE SHIELDS &amp; STEALTH MODE"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switchZone1"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:text="Zone 1: Left Edge &amp; Palm Guard"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switchZone2"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="Zone 2: Top Status Bar &amp; Call Guard"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switchZone3"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="Zone 3: Area Below 3rd-Finger Button"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switchZone4"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="Zone 4: Extra Shield (Right of 3rd-Finger)"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:background="@color/card_border" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switchHidePillInLock"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="Stealth Mode: Hide Toggle in Lock Mode"
+                android:textColor="@color/accent_green"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:text="Press Vol Up + Vol Down together inside game to toggle unhide/hide."
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switchLockBorder"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="Show Faint Border in Lock Mode (For Testing)"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/tvOpacityValue"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="Bar Red Opacity: 50%"
+                android:textColor="@color/text_primary"
+                android:textSize="13sp" />
+
+            <SeekBar
+                android:id="@+id/seekBarEditOpacity"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_marginTop="4dp"
+                android:max="95"
+                android:progress="50" />
+        </LinearLayout>
+
+        <!-- 5. RESET -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/card_dark"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:layout_marginBottom="24dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="5. RESET CONTROLS"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/btnResetZones"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="10dp"
+                android:backgroundTint="@color/button_dark"
+                android:text="Reset All Zones &amp; Restore Defaults"
+                android:textAllCaps="false"
+                android:textColor="@color/text_primary" />
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>
+
+
+================================================================================
+FILE: app/src/main/java/com/wolver/touchguard/MainActivity.kt
+PATH: C:\Users\Lenovo\WolverTouchGuard\app\src\main\java\com\wolver\touchguard\MainActivity.kt
+================================================================================
+
+package com.wolver.touchguard
+
+import android.accessibilityservice.AccessibilityServiceInfo
+import android.app.AlertDialog
+import android.content.Context
+import android.content.Intent
+import android.content.pm.ApplicationInfo
+import android.content.pm.PackageManager
+import android.content.res.ColorStateList
+import android.graphics.Color
+import android.net.Uri
+import android.os.Bundle
+import android.provider.Settings
+import android.view.accessibility.AccessibilityManager
+import android.widget.Button
+import android.widget.SeekBar
+import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.SwitchCompat
+
+class MainActivity : AppCompatActivity() {
+
+    private lateinit var prefManager: PrefManager
+
+    private lateinit var tvCurrentVersionBadge: TextView
+    private lateinit var tvUpdateStatus: TextView
+    private lateinit var btnCheckUpdate: Button
+
+    private lateinit var tvServiceStatus: TextView
+    private lateinit var btnOpenAppInfo: Button
+    private lateinit var btnOpenAccessibility: Button
+    private lateinit var switchMasterEnable: SwitchCompat
+    private lateinit var switchAppFilter: SwitchCompat
+    private lateinit var tvSelectedAppsSummary: TextView
+    private lateinit var btnSelectApps: Button
+
+    private lateinit var switchViewBarsOnScreen: SwitchCompat
+    private lateinit var switchShowFloatingToggle: SwitchCompat
+    private lateinit var radarScreenPreview: ScreenRadarView
+
+    private lateinit var switchZone1: SwitchCompat
+    private lateinit var switchZone2: SwitchCompat
+    private lateinit var switchZone3: SwitchCompat
+    private lateinit var switchZone4: SwitchCompat
+
+    private lateinit var switchHidePillInLock: SwitchCompat
+    private lateinit var switchLockBorder: SwitchCompat
+    private lateinit var tvOpacityValue: TextView
+    private lateinit var seekBarEditOpacity: SeekBar
+
+    private lateinit var btnSelectZ1: Button
+    private lateinit var btnSelectZ2: Button
+    private lateinit var btnSelectZ3: Button
+    private lateinit var btnSelectZ4: Button
+    private lateinit var tvEditingZoneTitle: TextView
+    private lateinit var tvZoneX: TextView
+    private lateinit var seekZoneX: SeekBar
+    private lateinit var tvZoneY: TextView
+    private lateinit var seekZoneY: SeekBar
+    private lateinit var tvZoneW: TextView
+    private lateinit var seekZoneW: SeekBar
+    private lateinit var tvZoneH: TextView
+    private lateinit var seekZoneH: SeekBar
+
+    private lateinit var btnForceEditMode: Button
+    private lateinit var btnForceLockMode: Button
+    private lateinit var btnResetZones: Button
+
+    private var currentlySelectedZoneForSliders: Int = 1
+    private var isUpdatingSlidersProgrammatically: Boolean = false
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        prefManager = PrefManager(this)
+        bindViews()
+        setupListeners()
+
+        // Background update check on startup
+        checkAppUpdates(showToastIfLatest = false)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        syncUiWithPrefs()
+        updateServiceStatusBanner()
+    }
+
+    private fun bindViews() {
+        tvCurrentVersionBadge = findViewById(R.id.tvCurrentVersionBadge)
+        tvUpdateStatus = findViewById(R.id.tvUpdateStatus)
+        btnCheckUpdate = findViewById(R.id.btnCheckUpdate)
+        tvCurrentVersionBadge.text = "v${BuildConfig.VERSION_NAME}"
+
+        tvServiceStatus = findViewById(R.id.tvServiceStatus)
+        btnOpenAppInfo = findViewById(R.id.btnOpenAppInfo)
+        btnOpenAccessibility = findViewById(R.id.btnOpenAccessibility)
+        switchMasterEnable = findViewById(R.id.switchMasterEnable)
+        switchAppFilter = findViewById(R.id.switchAppFilter)
+        tvSelectedAppsSummary = findViewById(R.id.tvSelectedAppsSummary)
+        btnSelectApps = findViewById(R.id.btnSelectApps)
+
+        switchViewBarsOnScreen = findViewById(R.id.switchViewBarsOnScreen)
+        switchShowFloatingToggle = findViewById(R.id.switchShowFloatingToggle)
+        radarScreenPreview = findViewById(R.id.radarScreenPreview)
+        radarScreenPreview.prefManager = prefManager
+
+        switchZone1 = findViewById(R.id.switchZone1)
+        switchZone2 = findViewById(R.id.switchZone2)
+        switchZone3 = findViewById(R.id.switchZone3)
+        switchZone4 = findViewById(R.id.switchZone4)
+
+        switchHidePillInLock = findViewById(R.id.switchHidePillInLock)
+        switchLockBorder = findViewById(R.id.switchLockBorder)
+        tvOpacityValue = findViewById(R.id.tvOpacityValue)
+        seekBarEditOpacity = findViewById(R.id.seekBarEditOpacity)
+
+        btnSelectZ1 = findViewById(R.id.btnSelectZ1)
+        btnSelectZ2 = findViewById(R.id.btnSelectZ2)
+        btnSelectZ3 = findViewById(R.id.btnSelectZ3)
+        btnSelectZ4 = findViewById(R.id.btnSelectZ4)
+        tvEditingZoneTitle = findViewById(R.id.tvEditingZoneTitle)
+        tvZoneX = findViewById(R.id.tvZoneX)
+        seekZoneX = findViewById(R.id.seekZoneX)
+        tvZoneY = findViewById(R.id.tvZoneY)
+        seekZoneY = findViewById(R.id.seekZoneY)
+        tvZoneW = findViewById(R.id.tvZoneW)
+        seekZoneW = findViewById(R.id.seekZoneW)
+        tvZoneH = findViewById(R.id.tvZoneH)
+        seekZoneH = findViewById(R.id.seekZoneH)
+
+        btnForceEditMode = findViewById(R.id.btnForceEditMode)
+        btnForceLockMode = findViewById(R.id.btnForceLockMode)
+        btnResetZones = findViewById(R.id.btnResetZones)
+    }
+
+    private fun checkAppUpdates(showToastIfLatest: Boolean) {
+        tvUpdateStatus.text = "Checking GitHub for updates..."
+        tvUpdateStatus.setTextColor(Color.parseColor("#B0B0B0"))
+
+        UpdateManager.check(this) { info ->
+            if (info == null) {
+                tvUpdateStatus.text = "Could not reach update server. Check internet connection."
+                tvUpdateStatus.setTextColor(Color.parseColor("#FF5252"))
+                if (showToastIfLatest) {
+                    Toast.makeText(this, "Could not check for updates", Toast.LENGTH_SHORT).show()
+                }
+            } else if (info.hasUpdate) {
+                tvUpdateStatus.text = "🚀 New version v${info.latestVersionName} available!"
+                tvUpdateStatus.setTextColor(Color.parseColor("#00E676"))
+                UpdateManager.showUpdateDialog(this, info)
+            } else {
+                tvUpdateStatus.text = "● You are running the latest version (v${BuildConfig.VERSION_NAME})."
+                tvUpdateStatus.setTextColor(Color.parseColor("#00E676"))
+                if (showToastIfLatest) {
+                    Toast.makeText(this, "You're already on the latest version!", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    private fun syncUiWithPrefs() {
+        switchMasterEnable.isChecked = prefManager.isMasterEnabled
+        switchAppFilter.isChecked = prefManager.isAppFilterEnabled
+        updateSelectedAppsSummaryText()
+
+        switchViewBarsOnScreen.isChecked = prefManager.showOverlayInApp
+        switchShowFloatingToggle.isChecked = !prefManager.hideFloatingToggleAlways
+
+        switchZone1.isChecked = prefManager.isZoneEnabled(1)
+        switchZone2.isChecked = prefManager.isZoneEnabled(2)
+        switchZone3.isChecked = prefManager.isZoneEnabled(3)
+        switchZone4.isChecked = prefManager.isZoneEnabled(4)
+
+        switchHidePillInLock.isChecked = prefManager.hidePillInLockMode
+        switchLockBorder.isChecked = prefManager.showLockBorder
+
+        val opacity = prefManager.editOpacityPercent
+        seekBarEditOpacity.progress = opacity
+        tvOpacityValue.text = "Bar Red Opacity: $opacity%"
+
+        loadZoneIntoSliders(currentlySelectedZoneForSliders)
+        radarScreenPreview.invalidate()
+    }
+
+    private fun loadZoneIntoSliders(zoneId: Int) {
+        currentlySelectedZoneForSliders = zoneId
+        radarScreenPreview.selectedZoneId = zoneId
+        isUpdatingSlidersProgrammatically = true
+
+        val buttons = listOf(btnSelectZ1, btnSelectZ2, btnSelectZ3, btnSelectZ4)
+        buttons.forEachIndexed { index, button ->
+            val color = if (index + 1 == zoneId) "#FF1744" else "#1E1E1E"
+            button.backgroundTintList = ColorStateList.valueOf(Color.parseColor(color))
+        }
+
+        val cfg = prefManager.getZoneConfig(zoneId)
+        tvEditingZoneTitle.text = "Adjusting: ${cfg.title}"
+
+        seekZoneX.progress = cfg.x.coerceIn(0, seekZoneX.max)
+        tvZoneX.text = "Horizontal Position (X): ${cfg.x} px"
+
+        seekZoneY.progress = cfg.y.coerceIn(0, seekZoneY.max)
+        tvZoneY.text = "Vertical Position (Y): ${cfg.y} px"
+
+        seekZoneW.progress = cfg.width.coerceIn(40, seekZoneW.max)
+        tvZoneW.text = "Zone Width: ${cfg.width} px"
+
+        seekZoneH.progress = cfg.height.coerceIn(35, seekZoneH.max)
+        tvZoneH.text = "Zone Height: ${cfg.height} px"
+
+        isUpdatingSlidersProgrammatically = false
+        radarScreenPreview.invalidate()
+    }
+
+    private fun saveCurrentSliderValuesToZone() {
+        if (isUpdatingSlidersProgrammatically) return
+        val id = currentlySelectedZoneForSliders
+        val newX = seekZoneX.progress
+        val newY = seekZoneY.progress
+        val newW = seekZoneW.progress.coerceAtLeast(40)
+        val newH = seekZoneH.progress.coerceAtLeast(35)
+
+        tvZoneX.text = "Horizontal Position (X): $newX px"
+        tvZoneY.text = "Vertical Position (Y): $newY px"
+        tvZoneW.text = "Zone Width: $newW px"
+        tvZoneH.text = "Zone Height: $newH px"
+
+        prefManager.saveZoneBounds(id, newX, newY, newW, newH)
+        radarScreenPreview.invalidate()
+        notifyServiceToRefresh()
+    }
+
+    private fun setupListeners() {
+        btnCheckUpdate.setOnClickListener {
+            checkAppUpdates(showToastIfLatest = true)
+        }
+
+        btnOpenAppInfo.setOnClickListener {
+            try {
+                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                    data = Uri.fromParts("package", packageName, null)
+                }
+                startActivity(intent)
+            } catch (_: Exception) {
+                Toast.makeText(this, "Could not open App Info", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        btnOpenAccessibility.setOnClickListener {
+            try {
+                startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+            } catch (_: Exception) {
+                Toast.makeText(this, "Could not open Accessibility Settings", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        switchMasterEnable.setOnCheckedChangeListener { _, isChecked ->
+            prefManager.isMasterEnabled = isChecked
+            notifyServiceToRefresh()
+            radarScreenPreview.invalidate()
+        }
+
+        switchAppFilter.setOnCheckedChangeListener { _, isChecked ->
+            prefManager.isAppFilterEnabled = isChecked
+            notifyServiceToRefresh()
+        }
+
+        btnSelectApps.setOnClickListener {
+            showAppSelectionDialog()
+        }
+
+        switchViewBarsOnScreen.setOnCheckedChangeListener { _, isChecked ->
+            prefManager.showOverlayInApp = isChecked
+            if (isChecked) {
+                prefManager.currentMode = PrefManager.MODE_EDIT
+            }
+            notifyServiceToRefresh()
+            val msg = if (isChecked) "Blockage bars VISIBLE on screen" else "Blockage bars HIDDEN from screen"
+            Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+        }
+
+        switchShowFloatingToggle.setOnCheckedChangeListener { _, isChecked ->
+            prefManager.hideFloatingToggleAlways = !isChecked
+            notifyServiceToRefresh()
+            val msg = if (isChecked) "Floating toggle visible on screen" else "Floating toggle completely hidden"
+            Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+        }
+
+        radarScreenPreview.onZoneSelected = { zoneId ->
+            loadZoneIntoSliders(zoneId)
+        }
+
+        switchZone1.setOnCheckedChangeListener { _, isChecked ->
+            prefManager.setZoneEnabled(1, isChecked)
+            radarScreenPreview.invalidate()
+            notifyServiceToRefresh()
+        }
+
+        switchZone2.setOnCheckedChangeListener { _, isChecked ->
+            prefManager.setZoneEnabled(2, isChecked)
+            radarScreenPreview.invalidate()
+            notifyServiceToRefresh()
+        }
+
+        switchZone3.setOnCheckedChangeListener { _, isChecked ->
+            prefManager.setZoneEnabled(3, isChecked)
+            radarScreenPreview.invalidate()
+            notifyServiceToRefresh()
+        }
+
+        switchZone4.setOnCheckedChangeListener { _, isChecked ->
+            prefManager.setZoneEnabled(4, isChecked)
+            radarScreenPreview.invalidate()
+            notifyServiceToRefresh()
+        }
+
+        switchHidePillInLock.setOnCheckedChangeListener { _, isChecked ->
+            prefManager.hidePillInLockMode = isChecked
+            notifyServiceToRefresh()
+        }
+
+        switchLockBorder.setOnCheckedChangeListener { _, isChecked ->
+            prefManager.showLockBorder = isChecked
+            notifyServiceToRefresh()
+        }
+
+        seekBarEditOpacity.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                val clamped = progress.coerceIn(15, 95)
+                tvOpacityValue.text = "Bar Red Opacity: $clamped%"
+                if (fromUser) {
+                    prefManager.editOpacityPercent = clamped
+                    notifyServiceToRefresh()
+                }
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+
+        btnSelectZ1.setOnClickListener { loadZoneIntoSliders(1) }
+        btnSelectZ2.setOnClickListener { loadZoneIntoSliders(2) }
+        btnSelectZ3.setOnClickListener { loadZoneIntoSliders(3) }
+        btnSelectZ4.setOnClickListener { loadZoneIntoSliders(4) }
+
+        val sliderListener = object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                if (fromUser) {
+                    saveCurrentSliderValuesToZone()
+                }
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        }
+
+        seekZoneX.setOnSeekBarChangeListener(sliderListener)
+        seekZoneY.setOnSeekBarChangeListener(sliderListener)
+        seekZoneW.setOnSeekBarChangeListener(sliderListener)
+        seekZoneH.setOnSeekBarChangeListener(sliderListener)
+
+        btnForceEditMode.setOnClickListener {
+            prefManager.isPillHiddenManually = false
+            prefManager.showOverlayInApp = true
+            prefManager.currentMode = PrefManager.MODE_EDIT
+            switchViewBarsOnScreen.isChecked = true
+            notifyServiceToRefresh()
+            Toast.makeText(this, "Bars are now VISIBLE on screen for adjustment", Toast.LENGTH_SHORT).show()
+        }
+
+        btnForceLockMode.setOnClickListener {
+            prefManager.currentMode = PrefManager.MODE_LOCK
+            prefManager.showOverlayInApp = false
+            switchViewBarsOnScreen.isChecked = false
+            notifyServiceToRefresh()
+            Toast.makeText(this, "Bars HIDDEN. Active touch blocking enabled.", Toast.LENGTH_SHORT).show()
+        }
+
+        btnResetZones.setOnClickListener {
+            prefManager.resetZonesToDefaults()
+            syncUiWithPrefs()
+            notifyServiceToRefresh()
+            Toast.makeText(this, "All zones restored to defaults", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun updateSelectedAppsSummaryText() {
+        val selected = prefManager.selectedPackages
+        if (selected.isEmpty()) {
+            tvSelectedAppsSummary.text = "No apps selected (Select at least Free Fire)"
+            tvSelectedAppsSummary.setTextColor(Color.parseColor("#FF1744"))
+        } else {
+            tvSelectedAppsSummary.text = "Active for (${selected.size}): ${selected.joinToString(", ")}"
+            tvSelectedAppsSummary.setTextColor(Color.parseColor("#00E676"))
+        }
+    }
+
+    private fun showAppSelectionDialog() {
+        val pm = packageManager
+        val installedApps = pm.getInstalledApplications(PackageManager.GET_META_DATA)
+
+        data class AppEntry(val label: String, val pkg: String)
+
+        val entriesMap = linkedMapOf<String, String>()
+        entriesMap["com.dts.freefireth"] = "Free Fire (com.dts.freefireth)"
+        entriesMap["com.dts.freefiremax"] = "Free Fire MAX (com.dts.freefiremax)"
+
+        val userApps = installedApps
+            .filter { app ->
+                val isUserApp = (app.flags and ApplicationInfo.FLAG_SYSTEM) == 0 ||
+                        (app.flags and ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0
+                isUserApp && app.packageName != packageName
+            }
+            .map { app ->
+                val name = pm.getApplicationLabel(app).toString()
+                AppEntry("$name (${app.packageName})", app.packageName)
+            }
+            .sortedBy { it.label.lowercase() }
+
+        for (item in userApps) {
+            entriesMap[item.pkg] = item.label
+        }
+
+        val pkgList = entriesMap.keys.toList()
+        val labelArray = entriesMap.values.toTypedArray()
+        val currentSelected = prefManager.selectedPackages.toMutableSet()
+        val checkedItems = BooleanArray(pkgList.size) { index ->
+            currentSelected.contains(pkgList[index])
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle("Select Games for Touch Guard")
+            .setMultiChoiceItems(labelArray, checkedItems) { _, which, isChecked ->
+                val pkg = pkgList[which]
+                if (isChecked) {
+                    currentSelected.add(pkg)
+                } else {
+                    currentSelected.remove(pkg)
+                }
+            }
+            .setPositiveButton("Save") { _, _ ->
+                prefManager.selectedPackages = currentSelected
+                updateSelectedAppsSummaryText()
+                notifyServiceToRefresh()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun updateServiceStatusBanner() {
+        val enabled = isAccessibilityServiceEnabled(this, TouchGuardAccessibilityService::class.java)
+        if (enabled) {
+            tvServiceStatus.text = "● ACTIVE — Accessibility Overlay Running"
+            tvServiceStatus.setTextColor(Color.parseColor("#00E676"))
+            notifyServiceToRefresh()
+        } else {
+            tvServiceStatus.text = "● INACTIVE — Enable in Accessibility Settings"
+            tvServiceStatus.setTextColor(Color.parseColor("#FF1744"))
+        }
+    }
+
+    private fun notifyServiceToRefresh() {
+        TouchGuardAccessibilityService.instance?.refreshOverlaysVisibilityAndState()
+    }
+
+    private fun isAccessibilityServiceEnabled(context: Context, serviceClass: Class<*>): Boolean {
+        val am = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
+        val enabledServices = am.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_ALL_MASK)
+        for (service in enabledServices) {
+            val serviceInfo = service.resolveInfo.serviceInfo
+            if (serviceInfo.packageName == context.packageName && serviceInfo.name == serviceClass.name) {
+                return true
+            }
+        }
+        return false
+    }
+}
+
+
+================================================================================
+FILE: app/src/main/java/com/wolver/touchguard/TouchGuardAccessibilityService.kt
+PATH: C:\Users\Lenovo\WolverTouchGuard\app\src\main\java\com\wolver\touchguard\TouchGuardAccessibilityService.kt
+================================================================================
+
+package com.wolver.touchguard
+
+import android.accessibilityservice.AccessibilityService
+import android.content.Intent
+import android.content.res.Configuration
+import android.graphics.PixelFormat
+import android.os.Build
+import android.view.Gravity
+import android.view.KeyEvent
+import android.view.MotionEvent
+import android.view.View
+import android.view.WindowManager
+import android.view.accessibility.AccessibilityEvent
+import android.view.accessibility.AccessibilityWindowInfo
+import android.widget.Toast
+
+class TouchGuardAccessibilityService : AccessibilityService() {
+
+    companion object {
+        @Volatile
+        var instance: TouchGuardAccessibilityService? = null
+            private set
+
+        private val IGNORED_TRANSIENT_PACKAGES = setOf(
+            "com.android.systemui",
+            "android",
+            "com.transsion.gamespace",
+            "com.transsion.xarena",
+            "com.transsion.smartpanel",
+            "com.transsion.kolun.assistant",
+            "com.google.android.inputmethod.latin"
+        )
+    }
+
+    private lateinit var prefManager: PrefManager
+    private lateinit var windowManager: WindowManager
+
+    private val zoneViews = mutableMapOf<Int, ZoneOverlayView>()
+    private val zoneParams = mutableMapOf<Int, WindowManager.LayoutParams>()
+
+    private var pillView: FloatingPillView? = null
+    private var pillParams: WindowManager.LayoutParams? = null
+
+    private var menuView: FloatingMenuView? = null
+
+    private var currentForegroundPackage: String = ""
+    private var overlaysAttached = false
+
+    private var volUpPressed = false
+    private var volDownPressed = false
+
+    override fun onServiceConnected() {
+        super.onServiceConnected()
+        instance = this
+        prefManager = PrefManager(this)
+        windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+        createOverlayViews()
+        refreshOverlaysVisibilityAndState()
+    }
+
+    override fun onAccessibilityEvent(event: AccessibilityEvent?) {
+        if (event == null) return
+
+        if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED ||
+            event.eventType == AccessibilityEvent.TYPE_WINDOWS_CHANGED
+        ) {
+            val detectedPkg = resolveActiveApplicationPackage(event)
+            if (detectedPkg.isNotEmpty() && detectedPkg != currentForegroundPackage) {
+                currentForegroundPackage = detectedPkg
+                refreshOverlaysVisibilityAndState()
+            }
+        }
+    }
+
+    private fun resolveActiveApplicationPackage(event: AccessibilityEvent): String {
+        try {
+            val interactiveWindows = windows
+            if (!interactiveWindows.isNullOrEmpty()) {
+                val targetPackages = prefManager.selectedPackages
+                for (win in interactiveWindows) {
+                    if (win.type == AccessibilityWindowInfo.TYPE_APPLICATION) {
+                        val pkg = win.root?.packageName?.toString().orEmpty()
+                        if (pkg.isNotEmpty() && targetPackages.contains(pkg)) {
+                            return pkg
+                        }
+                    }
+                }
+                for (win in interactiveWindows) {
+                    if (win.type == AccessibilityWindowInfo.TYPE_APPLICATION) {
+                        val pkg = win.root?.packageName?.toString().orEmpty()
+                        if (pkg == packageName) {
+                            return pkg
+                        }
+                    }
+                }
+                for (win in interactiveWindows) {
+                    if (win.type == AccessibilityWindowInfo.TYPE_APPLICATION) {
+                        val pkg = win.root?.packageName?.toString().orEmpty()
+                        if (pkg.isNotEmpty() &&
+                            !IGNORED_TRANSIENT_PACKAGES.contains(pkg)
+                        ) {
+                            return pkg
+                        }
+                    }
+                }
+            }
+        } catch (_: Exception) {
+        }
+
+        val eventPkg = event.packageName?.toString().orEmpty()
+        if (eventPkg.isNotEmpty() &&
+            !IGNORED_TRANSIENT_PACKAGES.contains(eventPkg)
+        ) {
+            return eventPkg
+        }
+
+        return currentForegroundPackage
+    }
+
+    override fun onKeyEvent(event: KeyEvent): Boolean {
+        when (event.keyCode) {
+            KeyEvent.KEYCODE_VOLUME_UP -> {
+                volUpPressed = (event.action == KeyEvent.ACTION_DOWN)
+            }
+            KeyEvent.KEYCODE_VOLUME_DOWN -> {
+                volDownPressed = (event.action == KeyEvent.ACTION_DOWN)
+            }
+        }
+        if (volUpPressed && volDownPressed && overlaysAttached) {
+            volUpPressed = false
+            volDownPressed = false
+
+            // Vol Up + Vol Down immediately unhides toggle if hidden, or switches modes
+            if (prefManager.hideFloatingToggleAlways || prefManager.isPillHiddenManually) {
+                prefManager.hideFloatingToggleAlways = false
+                prefManager.isPillHiddenManually = false
+                Toast.makeText(this, "Floating toggle unhidden!", Toast.LENGTH_SHORT).show()
+            } else {
+                val nextMode = if (prefManager.currentMode == PrefManager.MODE_LOCK) {
+                    PrefManager.MODE_EDIT
+                } else {
+                    PrefManager.MODE_LOCK
+                }
+                prefManager.currentMode = nextMode
+            }
+            refreshOverlaysVisibilityAndState()
+            return true
+        }
+        return super.onKeyEvent(event)
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        refreshOverlaysVisibilityAndState()
+    }
+
+    private fun showFloatingMenu() {
+        if (menuView != null) return
+
+        val menu = FloatingMenuView(
+            context = this,
+            onLockClicked = {
+                prefManager.currentMode = PrefManager.MODE_LOCK
+                refreshOverlaysVisibilityAndState()
+                Toast.makeText(this, "Lock Mode Active (Touch Blocking ON)", Toast.LENGTH_SHORT).show()
+            },
+            onEditClicked = {
+                prefManager.currentMode = PrefManager.MODE_EDIT
+                prefManager.showOverlayInApp = true
+                refreshOverlaysVisibilityAndState()
+                Toast.makeText(this, "Edit Mode Active (Bars Visible)", Toast.LENGTH_SHORT).show()
+            },
+            onHideToggleClicked = {
+                // Completely hide toggle when chosen from menu
+                prefManager.hideFloatingToggleAlways = true
+                prefManager.isPillHiddenManually = true
+                refreshOverlaysVisibilityAndState()
+                Toast.makeText(
+                    this,
+                    "Floating toggle is now HIDDEN. Re-enable in app or press Vol Up + Vol Down.",
+                    Toast.LENGTH_LONG
+                ).show()
+            },
+            onOpenAppClicked = {
+                try {
+                    val intent = packageManager.getLaunchIntentForPackage(packageName)?.apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    if (intent != null) startActivity(intent)
+                } catch (_: Exception) {
+                }
+            },
+            onDismissClicked = {
+                dismissFloatingMenu()
+            }
+        )
+
+        val params = WindowManager.LayoutParams(
+            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+            PixelFormat.TRANSLUCENT
+        )
+
+        menuView = menu
+        try {
+            windowManager.addView(menu, params)
+        } catch (_: Exception) {
+            menuView = null
+        }
+    }
+
+    private fun dismissFloatingMenu() {
+        menuView?.let {
+            try {
+                if (it.parent != null) windowManager.removeView(it)
+            } catch (_: Exception) {
+            }
+        }
+        menuView = null
+    }
+
+    private fun createOverlayViews() {
+        if (overlaysAttached) return
+
+        for (zoneId in 1..PrefManager.TOTAL_ZONES) {
+            val config = prefManager.getZoneConfig(zoneId)
+            val view = ZoneOverlayView(
+                context = this,
+                zoneId = zoneId,
+                title = config.title,
+                onBoundsUpdated = { id, newX, newY, newW, newH ->
+                    prefManager.saveZoneBounds(id, newX, newY, newW, newH)
+                    val lp = zoneParams[id]
+                    val v = zoneViews[id]
+                    if (lp != null && v != null && v.parent != null) {
+                        lp.x = newX
+                        lp.y = newY
+                        lp.width = newW
+                        lp.height = newH
+                        try {
+                            windowManager.updateViewLayout(v, lp)
+                        } catch (_: Exception) {
+                        }
+                    }
+                }
+            )
+
+            // Touch forwarding: ensures clicking the toggle always works even if inside a blocked zone!
+            view.isPillAt = { rawX, rawY ->
+                val pill = pillView
+                if (pill != null && pill.visibility == View.VISIBLE) {
+                    val loc = IntArray(2)
+                    pill.getLocationOnScreen(loc)
+                    val pLeft = loc[0].toFloat()
+                    val pTop = loc[1].toFloat()
+                    val pRight = pLeft + pill.width.toFloat()
+                    val pBottom = pTop + pill.height.toFloat()
+                    rawX in pLeft..pRight && rawY in pTop..pBottom
+                } else {
+                    false
+                }
+            }
+
+            view.onPillTouchForward = { ev ->
+                val pill = pillView
+                if (pill != null && pill.visibility == View.VISIBLE) {
+                    val loc = IntArray(2)
+                    pill.getLocationOnScreen(loc)
+                    val copy = MotionEvent.obtain(ev)
+                    copy.setLocation(ev.rawX - loc[0].toFloat(), ev.rawY - loc[1].toFloat())
+                    pill.dispatchTouchEvent(copy)
+                    copy.recycle()
+                }
+            }
+
+            val params = createBaseLayoutParams(
+                x = config.x,
+                y = config.y,
+                width = config.width,
+                height = config.height,
+                touchable = true
+            )
+
+            zoneViews[zoneId] = view
+            zoneParams[zoneId] = params
+
+            try {
+                windowManager.addView(view, params)
+            } catch (_: Exception) {
+            }
+        }
+
+        val pill = FloatingPillView(
+            context = this,
+            onPillTapped = {
+                // Clicking the toggle shows the Quick Menu with [Hide Toggle] option!
+                showFloatingMenu()
+            },
+            onCollapseToggled = { collapsed ->
+                prefManager.isPillCollapsed = collapsed
+                refreshOverlaysVisibilityAndState()
+            },
+            onHideCompletelyClicked = {
+                // Clicking ✕ on the pill hides it completely!
+                prefManager.hideFloatingToggleAlways = true
+                prefManager.isPillHiddenManually = true
+                refreshOverlaysVisibilityAndState()
+                Toast.makeText(
+                    this,
+                    "Floating toggle HIDDEN. Re-enable in app or press Vol Up + Vol Down.",
+                    Toast.LENGTH_LONG
+                ).show()
+            },
+            onPositionMoved = { newX, newY ->
+                prefManager.pillX = newX
+                prefManager.pillY = newY
+                val lp = pillParams
+                val v = pillView
+                if (lp != null && v != null && v.parent != null) {
+                    lp.x = newX
+                    lp.y = newY
+                    try {
+                        windowManager.updateViewLayout(v, lp)
+                    } catch (_: Exception) {
+                    }
+                }
+            }
+        )
+
+        val pParams = createBaseLayoutParams(
+            x = prefManager.pillX,
+            y = prefManager.pillY,
+            width = WindowManager.LayoutParams.WRAP_CONTENT,
+            height = WindowManager.LayoutParams.WRAP_CONTENT,
+            touchable = true
+        )
+
+        pillView = pill
+        pillParams = pParams
+
+        try {
+            windowManager.addView(pill, pParams)
+            overlaysAttached = true
+        } catch (_: Exception) {
+        }
+    }
+
+    private fun createBaseLayoutParams(
+        x: Int,
+        y: Int,
+        width: Int,
+        height: Int,
+        touchable: Boolean
+    ): WindowManager.LayoutParams {
+        var flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+
+        if (!touchable) {
+            flags = flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+        }
+
+        val params = WindowManager.LayoutParams(
+            width,
+            height,
+            WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+            flags,
+            PixelFormat.TRANSLUCENT
+        )
+
+        params.gravity = Gravity.TOP or Gravity.START
+        params.x = x
+        params.y = y
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            params.layoutInDisplayCutoutMode =
+                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            params.layoutInDisplayCutoutMode =
+                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+        }
+
+        return params
+    }
+
+    fun refreshOverlaysVisibilityAndState() {
+        if (!overlaysAttached) {
+            createOverlayViews()
+        }
+
+        val masterOn = prefManager.isMasterEnabled
+        val filterOn = prefManager.isAppFilterEnabled
+        val allowedPackages = prefManager.selectedPackages
+        val mode = prefManager.currentMode
+
+        val isSelfApp = (currentForegroundPackage == packageName) || (currentForegroundPackage.isEmpty())
+        val shouldShowForCurrentApp = if (isSelfApp) {
+            prefManager.showOverlayInApp || (mode == PrefManager.MODE_EDIT)
+        } else if (!filterOn) {
+            true
+        } else {
+            currentForegroundPackage.isNotEmpty() && allowedPackages.contains(currentForegroundPackage)
+        }
+
+        val activeOverall = masterOn && shouldShowForCurrentApp
+        val opacity = prefManager.editOpacityPercent
+        val lockBorder = prefManager.showLockBorder
+
+        for (zoneId in 1..PrefManager.TOTAL_ZONES) {
+            val view = zoneViews[zoneId] ?: continue
+            val params = zoneParams[zoneId] ?: continue
+            val cfg = prefManager.getZoneConfig(zoneId)
+
+            if (!activeOverall || !cfg.enabled || mode == PrefManager.MODE_OFF) {
+                view.visibility = View.GONE
+            } else {
+                view.visibility = View.VISIBLE
+                params.x = cfg.x
+                params.y = cfg.y
+                params.width = cfg.width
+                params.height = cfg.height
+
+                if (isSelfApp && mode == PrefManager.MODE_LOCK) {
+                    params.flags = params.flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+                } else {
+                    params.flags = params.flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE.inv()
+                }
+
+                view.updateState(
+                    x = cfg.x,
+                    y = cfg.y,
+                    w = cfg.width,
+                    h = cfg.height,
+                    mode = mode,
+                    opacityPercent = opacity,
+                    lockBorder = lockBorder
+                )
+
+                try {
+                    windowManager.updateViewLayout(view, params)
+                } catch (_: Exception) {
+                }
+            }
+        }
+
+        pillView?.let { pill ->
+            val pParams = pillParams ?: return@let
+            val shouldHidePill =
+                prefManager.hideFloatingToggleAlways ||
+                prefManager.isPillHiddenManually ||
+                (mode == PrefManager.MODE_LOCK && prefManager.hidePillInLockMode)
+
+            if (!activeOverall || shouldHidePill) {
+                pill.visibility = View.GONE
+                dismissFloatingMenu()
+            } else {
+                pill.visibility = View.VISIBLE
+                pParams.x = prefManager.pillX
+                pParams.y = prefManager.pillY
+                pill.updatePillState(
+                    mode = mode,
+                    collapsed = prefManager.isPillCollapsed,
+                    x = prefManager.pillX,
+                    y = prefManager.pillY
+                )
+                try {
+                    windowManager.updateViewLayout(pill, pParams)
+                } catch (_: Exception) {
+                }
+            }
+        }
+    }
+
+    private fun removeAllOverlays() {
+        dismissFloatingMenu()
+        for ((_, view) in zoneViews) {
+            try {
+                if (view.parent != null) windowManager.removeView(view)
+            } catch (_: Exception) {
+            }
+        }
+        zoneViews.clear()
+        zoneParams.clear()
+
+        pillView?.let {
+            try {
+                if (it.parent != null) windowManager.removeView(it)
+            } catch (_: Exception) {
+            }
+        }
+        pillView = null
+        pillParams = null
+        overlaysAttached = false
+    }
+
+    override fun onInterrupt() {
+    }
+
+    override fun onDestroy() {
+        removeAllOverlays()
+        instance = null
+        super.onDestroy()
+    }
+}
+
+
+================================================================================
+FILE: app/src/main/java/com/wolver/touchguard/ZoneOverlayView.kt
+PATH: C:\Users\Lenovo\WolverTouchGuard\app\src\main\java\com\wolver\touchguard\ZoneOverlayView.kt
+================================================================================
+
+package com.wolver.touchguard
+
+import android.annotation.SuppressLint
+import android.content.Context
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.RectF
+import android.view.MotionEvent
+import android.view.View
+import kotlin.math.max
+
+@SuppressLint("ViewConstructor")
+class ZoneOverlayView(
+    context: Context,
+    val zoneId: Int,
+    private val title: String,
+    private val onBoundsUpdated: (zoneId: Int, x: Int, y: Int, width: Int, height: Int) -> Unit
+) : View(context) {
+
+    companion object {
+        private const val HANDLE_NONE = 0
+        private const val HANDLE_TOP_LEFT = 1
+        private const val HANDLE_TOP_RIGHT = 2
+        private const val HANDLE_BOTTOM_LEFT = 3
+        private const val HANDLE_BOTTOM_RIGHT = 4
+    }
+
+    var isPillAt: ((rawX: Float, rawY: Float) -> Boolean)? = null
+    var onPillTouchForward: ((event: MotionEvent) -> Unit)? = null
+
+    private var currentMode: Int = PrefManager.MODE_EDIT
+    private var editOpacityPercent: Int = 40
+    private var showLockBorder: Boolean = false
+
+    private var posX: Int = 0
+    private var posY: Int = 0
+    private var zoneW: Int = 200
+    private var zoneH: Int = 200
+
+    private val density = resources.displayMetrics.density
+    private val handleSizePx = 32f * density
+    private val touchSlopHandlePx = 42f * density
+    private val minWidthPx = (40f * density).toInt()
+    private val minHeightPx = (35f * density).toInt()
+
+    private val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.FILL
+    }
+
+    private val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeWidth = 2f * density
+    }
+
+    private val handlePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.FILL
+        color = Color.parseColor("#EEFFFFFF")
+    }
+
+    private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.WHITE
+        textSize = 11f * density
+        isFakeBoldText = true
+        setShadowLayer(4f, 0f, 0f, Color.BLACK)
+    }
+
+    private val handleRect = RectF()
+
+    private var activeHandle = HANDLE_NONE
+    private var initialTouchRawX = 0f
+    private var initialTouchRawY = 0f
+    private var initialX = 0
+    private var initialY = 0
+    private var initialW = 0
+    private var initialH = 0
+
+    fun updateState(
+        x: Int,
+        y: Int,
+        w: Int,
+        h: Int,
+        mode: Int,
+        opacityPercent: Int,
+        lockBorder: Boolean
+    ) {
+        posX = x
+        posY = y
+        zoneW = max(minWidthPx, w)
+        zoneH = max(minHeightPx, h)
+        currentMode = mode
+        editOpacityPercent = opacityPercent
+        showLockBorder = lockBorder
+        invalidate()
+    }
+
+    override fun onDraw(canvas: Canvas) {
+        super.onDraw(canvas)
+
+        val w = width.toFloat()
+        val h = height.toFloat()
+
+        when (currentMode) {
+            PrefManager.MODE_EDIT -> {
+                val alpha = ((editOpacityPercent / 100f) * 255).toInt().coerceIn(30, 220)
+                fillPaint.color = Color.argb(alpha, 255, 23, 68)
+                canvas.drawRect(0f, 0f, w, h, fillPaint)
+
+                borderPaint.color = Color.parseColor("#FFFF1744")
+                borderPaint.strokeWidth = 2f * density
+                canvas.drawRect(1f, 1f, w - 1f, h - 1f, borderPaint)
+
+                handleRect.set(0f, 0f, handleSizePx, handleSizePx)
+                canvas.drawRect(handleRect, handlePaint)
+
+                handleRect.set(w - handleSizePx, 0f, w, handleSizePx)
+                canvas.drawRect(handleRect, handlePaint)
+
+                handleRect.set(0f, h - handleSizePx, handleSizePx, h)
+                canvas.drawRect(handleRect, handlePaint)
+
+                handleRect.set(w - handleSizePx, h - handleSizePx, w, h)
+                canvas.drawRect(handleRect, handlePaint)
+
+                val info = "$title [X:$posX Y:$posY | ${zoneW}x${zoneH}]"
+                val textY = (h / 2f).coerceIn(20f * density, (h - 10f * density).coerceAtLeast(20f * density))
+                canvas.drawText(info, 10f * density, textY, textPaint)
+            }
+
+            PrefManager.MODE_LOCK -> {
+                if (showLockBorder) {
+                    borderPaint.color = Color.parseColor("#18FF1744")
+                    borderPaint.strokeWidth = 1.5f * density
+                    canvas.drawRect(1f, 1f, w - 1f, h - 1f, borderPaint)
+                }
+            }
+
+            PrefManager.MODE_OFF -> {
+            }
+        }
+    }
+
+    private fun detectTouchedHandle(localX: Float, localY: Float): Int {
+        val w = width.toFloat()
+        val h = height.toFloat()
+
+        val nearLeft = localX <= touchSlopHandlePx
+        val nearRight = localX >= w - touchSlopHandlePx
+        val nearTop = localY <= touchSlopHandlePx
+        val nearBottom = localY >= h - touchSlopHandlePx
+
+        return when {
+            nearBottom && nearRight -> HANDLE_BOTTOM_RIGHT
+            nearTop && nearLeft -> HANDLE_TOP_LEFT
+            nearTop && nearRight -> HANDLE_TOP_RIGHT
+            nearBottom && nearLeft -> HANDLE_BOTTOM_LEFT
+            else -> HANDLE_NONE
+        }
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        // If the touch falls on the floating toggle pill, forward it immediately so the toggle is clickable
+        if (isPillAt?.invoke(event.rawX, event.rawY) == true) {
+            onPillTouchForward?.invoke(event)
+            return true
+        }
+
+        if (currentMode == PrefManager.MODE_LOCK) {
+            return true
+        }
+
+        if (currentMode == PrefManager.MODE_OFF) {
+            return false
+        }
+
+        when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                initialTouchRawX = event.rawX
+                initialTouchRawY = event.rawY
+                initialX = posX
+                initialY = posY
+                initialW = zoneW
+                initialH = zoneH
+                activeHandle = detectTouchedHandle(event.x, event.y)
+                return true
+            }
+
+            MotionEvent.ACTION_MOVE -> {
+                val dx = (event.rawX - initialTouchRawX).toInt()
+                val dy = (event.rawY - initialTouchRawY).toInt()
+
+                val metrics = resources.displayMetrics
+                val maxScreenW = metrics.widthPixels
+                val maxScreenH = metrics.heightPixels
+
+                when (activeHandle) {
+                    HANDLE_BOTTOM_RIGHT -> {
+                        zoneW = (initialW + dx).coerceIn(minWidthPx, maxScreenW)
+                        zoneH = (initialH + dy).coerceIn(minHeightPx, maxScreenH)
+                    }
+
+                    HANDLE_TOP_LEFT -> {
+                        val maxNewX = (initialX + initialW - minWidthPx).coerceAtLeast(0)
+                        val maxNewY = (initialY + initialH - minHeightPx).coerceAtLeast(0)
+                        val newX = (initialX + dx).coerceIn(0, maxNewX)
+                        val newY = (initialY + dy).coerceIn(0, maxNewY)
+                        posX = newX
+                        posY = newY
+                        zoneW = (initialW - (newX - initialX)).coerceIn(minWidthPx, maxScreenW)
+                        zoneH = (initialH - (newY - initialY)).coerceIn(minHeightPx, maxScreenH)
+                    }
+
+                    HANDLE_TOP_RIGHT -> {
+                        val maxNewY = (initialY + initialH - minHeightPx).coerceAtLeast(0)
+                        val newY = (initialY + dy).coerceIn(0, maxNewY)
+                        posY = newY
+                        zoneW = (initialW + dx).coerceIn(minWidthPx, maxScreenW)
+                        zoneH = (initialH - (newY - initialY)).coerceIn(minHeightPx, maxScreenH)
+                    }
+
+                    HANDLE_BOTTOM_LEFT -> {
+                        val maxNewX = (initialX + initialW - minWidthPx).coerceAtLeast(0)
+                        val newX = (initialX + dx).coerceIn(0, maxNewX)
+                        posX = newX
+                        zoneW = (initialW - (newX - initialX)).coerceIn(minWidthPx, maxScreenW)
+                        zoneH = (initialH + dy).coerceIn(minHeightPx, maxScreenH)
+                    }
+
+                    else -> {
+                        posX = (initialX + dx).coerceIn(0, (maxScreenW - zoneW).coerceAtLeast(0))
+                        posY = (initialY + dy).coerceIn(0, (maxScreenH - zoneH).coerceAtLeast(0))
+                    }
+                }
+
+                onBoundsUpdated(zoneId, posX, posY, zoneW, zoneH)
+                invalidate()
+                return true
+            }
+
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                activeHandle = HANDLE_NONE
+                onBoundsUpdated(zoneId, posX, posY, zoneW, zoneH)
+                return true
+            }
+        }
+        return true
+    }
+}
+
+
+================================================================================
+FILE: app/src/main/java/com/wolver/touchguard/ScreenRadarView.kt
+PATH: C:\Users\Lenovo\WolverTouchGuard\app\src\main\java\com\wolver\touchguard\ScreenRadarView.kt
+================================================================================
+
+package com.wolver.touchguard
+
+import android.content.Context
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.DashPathEffect
+import android.graphics.Paint
+import android.graphics.RectF
+import android.util.AttributeSet
+import android.view.MotionEvent
+import android.view.View
+
+class ScreenRadarView @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0
+) : View(context, attrs, defStyleAttr) {
+
+    private val density = resources.displayMetrics.density
+
+    var maxVirtualWidth: Float = 2644f
+    var maxVirtualHeight: Float = 1208f
+
+    var selectedZoneId: Int = 1
+        set(value) {
+            field = value
+            invalidate()
+        }
+
+    var onZoneSelected: ((Int) -> Unit)? = null
+    var prefManager: PrefManager? = null
+
+    private val outerFramePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.parseColor("#0D0D0D")
+        style = Paint.Style.FILL
+    }
+
+    private val screenBezelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.parseColor("#1C1C1C")
+        style = Paint.Style.FILL
+    }
+
+    private val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.parseColor("#333333")
+        style = Paint.Style.STROKE
+        strokeWidth = 2f * density
+    }
+
+    private val gridPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.parseColor("#262626")
+        style = Paint.Style.STROKE
+        strokeWidth = 1f * density
+        pathEffect = DashPathEffect(floatArrayOf(6f, 6f), 0f)
+    }
+
+    private val zoneFillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.FILL
+    }
+
+    private val zoneStrokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeWidth = 2f * density
+    }
+
+    private val labelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.WHITE
+        textSize = 10f * density
+        isFakeBoldText = true
+        setShadowLayer(4f, 0f, 0f, Color.BLACK)
+    }
+
+    private val phoneScreenRect = RectF()
+    private val zoneRect = RectF()
+
+    init {
+        val metrics = resources.displayMetrics
+        val screenW = metrics.widthPixels.toFloat()
+        val screenH = metrics.heightPixels.toFloat()
+        maxVirtualWidth = maxOf(screenW, screenH, 2600f)
+        maxVirtualHeight = minOf(screenW, screenH, 1200f)
+    }
+
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        val width = MeasureSpec.getSize(widthMeasureSpec)
+        val heightMode = MeasureSpec.getMode(heightMeasureSpec)
+        val heightSize = MeasureSpec.getSize(heightMeasureSpec)
+
+        val desiredHeight = if (heightMode == MeasureSpec.EXACTLY) {
+            heightSize
+        } else {
+            // Keep a clean fixed 20:9 phone aspect ratio (approx 2.2:1)
+            (width / 2.2f).toInt().coerceIn((140f * density).toInt(), (220f * density).toInt())
+        }
+        setMeasuredDimension(width, desiredHeight)
+    }
+
+    override fun onDraw(canvas: Canvas) {
+        super.onDraw(canvas)
+
+        val padX = 6f * density
+        val padY = 6f * density
+        phoneScreenRect.set(padX, padY, width - padX, height - padY)
+
+        // Draw phone bezel
+        canvas.drawRoundRect(phoneScreenRect, 12f * density, 12f * density, screenBezelPaint)
+        canvas.drawRoundRect(phoneScreenRect, 12f * density, 12f * density, borderPaint)
+
+        // Draw center screen alignment crosshair lines
+        val midX = phoneScreenRect.centerX()
+        val midY = phoneScreenRect.centerY()
+        canvas.drawLine(midX, phoneScreenRect.top, midX, phoneScreenRect.bottom, gridPaint)
+        canvas.drawLine(phoneScreenRect.left, midY, phoneScreenRect.right, midY, gridPaint)
+
+        val prefs = prefManager ?: return
+        val radarW = phoneScreenRect.width()
+        val radarH = phoneScreenRect.height()
+
+        val scaleX = radarW / maxVirtualWidth
+        val scaleY = radarH / maxVirtualHeight
+
+        // Draw unselected zones first
+        for (id in 1..PrefManager.TOTAL_ZONES) {
+            if (id == selectedZoneId) continue
+            drawZoneOnRadar(canvas, prefs, id, scaleX, scaleY, isSelected = false)
+        }
+
+        // Draw selected zone on top
+        drawZoneOnRadar(canvas, prefs, selectedZoneId, scaleX, scaleY, isSelected = true)
+
+        // Screen watermark text
+        labelPaint.color = Color.parseColor("#555555")
+        labelPaint.textSize = 8.5f * density
+        canvas.drawText("SCREEN MONITOR 2644x1208", phoneScreenRect.left + 8f * density, phoneScreenRect.top + 14f * density, labelPaint)
+    }
+
+    private fun drawZoneOnRadar(
+        canvas: Canvas,
+        prefs: PrefManager,
+        zoneId: Int,
+        scaleX: Float,
+        scaleY: Float,
+        isSelected: Boolean
+    ) {
+        val cfg = prefs.getZoneConfig(zoneId)
+        if (!cfg.enabled) return
+
+        val left = phoneScreenRect.left + (cfg.x * scaleX)
+        val top = phoneScreenRect.top + (cfg.y * scaleY)
+        val right = (left + (cfg.width * scaleX)).coerceAtMost(phoneScreenRect.right)
+        val bottom = (top + (cfg.height * scaleY)).coerceAtMost(phoneScreenRect.bottom)
+
+        zoneRect.set(left, top, right, bottom)
+
+        if (isSelected) {
+            zoneFillPaint.color = Color.argb(175, 255, 23, 68)
+            zoneStrokePaint.color = Color.parseColor("#FFFF1744")
+            zoneStrokePaint.strokeWidth = 2.5f * density
+        } else {
+            zoneFillPaint.color = Color.argb(85, 41, 121, 255)
+            zoneStrokePaint.color = Color.parseColor("#882979FF")
+            zoneStrokePaint.strokeWidth = 1.5f * density
+        }
+
+        canvas.drawRoundRect(zoneRect, 3f * density, 3f * density, zoneFillPaint)
+        canvas.drawRoundRect(zoneRect, 3f * density, 3f * density, zoneStrokePaint)
+
+        // Draw zone badge
+        labelPaint.color = if (isSelected) Color.WHITE else Color.parseColor("#CCCCCC")
+        labelPaint.textSize = 9.5f * density
+        val text = "Z$zoneId"
+        val textX = (zoneRect.left + 3f * density).coerceAtMost(phoneScreenRect.right - 22f * density)
+        val textY = (zoneRect.top + 12f * density).coerceAtMost(phoneScreenRect.bottom - 4f * density)
+        canvas.drawText(text, textX, textY, labelPaint)
+    }
+
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        if (event.actionMasked == MotionEvent.ACTION_DOWN) {
+            val prefs = prefManager ?: return super.onTouchEvent(event)
+            val radarW = phoneScreenRect.width()
+            val radarH = phoneScreenRect.height()
+            val scaleX = radarW / maxVirtualWidth
+            val scaleY = radarH / maxVirtualHeight
+
+            for (id in 1..PrefManager.TOTAL_ZONES) {
+                val cfg = prefs.getZoneConfig(id)
+                if (!cfg.enabled) continue
+                val left = phoneScreenRect.left + (cfg.x * scaleX)
+                val top = phoneScreenRect.top + (cfg.y * scaleY)
+                val right = left + (cfg.width * scaleX)
+                val bottom = top + (cfg.height * scaleY)
+
+                val hitRect = RectF(
+                    left - 12f * density,
+                    top - 12f * density,
+                    right + 12f * density,
+                    bottom + 12f * density
+                )
+
+                if (hitRect.contains(event.x, event.y)) {
+                    selectedZoneId = id
+                    onZoneSelected?.invoke(id)
+                    invalidate()
+                    return true
+                }
+            }
+        }
+        return super.onTouchEvent(event)
+    }
+}
+
+
+================================================================================
+FILE: app/src/main/java/com/wolver/touchguard/FloatingPillView.kt
+PATH: C:\Users\Lenovo\WolverTouchGuard\app\src\main\java\com\wolver\touchguard\FloatingPillView.kt
+================================================================================
+
+package com.wolver.touchguard
+
+import android.annotation.SuppressLint
+import android.content.Context
+import android.graphics.Color
+import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
+import android.util.TypedValue
+import android.view.Gravity
+import android.view.MotionEvent
+import android.widget.LinearLayout
+import android.widget.TextView
+import kotlin.math.hypot
+
+@SuppressLint("ViewConstructor")
+class FloatingPillView(
+    context: Context,
+    private val onPillTapped: () -> Unit,
+    private val onCollapseToggled: (collapsed: Boolean) -> Unit,
+    private val onHideCompletelyClicked: () -> Unit,
+    private val onPositionMoved: (x: Int, y: Int) -> Unit
+) : LinearLayout(context) {
+
+    private val density = resources.displayMetrics.density
+    private val tvDragAndStatus: TextView
+    private val tvCollapseBtn: TextView
+    private val tvHideFullBtn: TextView
+
+    private var currentMode: Int = PrefManager.MODE_EDIT
+    private var isCollapsed: Boolean = false
+
+    private var posX: Int = 950
+    private var posY: Int = 24
+    private var downRawX = 0f
+    private var downRawY = 0f
+    private var startX = 0
+    private var startY = 0
+    private var isDragging = false
+
+    init {
+        orientation = HORIZONTAL
+        gravity = Gravity.CENTER_VERTICAL
+
+        val bg = GradientDrawable().apply {
+            setColor(Color.parseColor("#EE121212"))
+            cornerRadius = 20f * density
+            setStroke((1.5f * density).toInt(), Color.parseColor("#88FFFFFF"))
+        }
+        background = bg
+        val padH = (12 * density).toInt()
+        val padV = (6 * density).toInt()
+        setPadding(padH, padV, padH, padV)
+
+        tvDragAndStatus = TextView(context).apply {
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(Color.WHITE)
+            gravity = Gravity.CENTER
+            setPadding((4 * density).toInt(), (2 * density).toInt(), (6 * density).toInt(), (2 * density).toInt())
+        }
+
+        tvCollapseBtn = TextView(context).apply {
+            text = " – "
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(Color.parseColor("#B0B0B0"))
+            gravity = Gravity.CENTER
+            val p = (6 * density).toInt()
+            setPadding(p, 0, p, 0)
+            setOnClickListener {
+                isCollapsed = !isCollapsed
+                applyVisualState()
+                onCollapseToggled(isCollapsed)
+            }
+        }
+
+        tvHideFullBtn = TextView(context).apply {
+            text = " ✕ "
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(Color.parseColor("#FF5252"))
+            gravity = Gravity.CENTER
+            val p = (6 * density).toInt()
+            setPadding(p, 0, p, 0)
+            setOnClickListener {
+                onHideCompletelyClicked()
+            }
+        }
+
+        addView(tvDragAndStatus)
+        addView(tvCollapseBtn)
+        addView(tvHideFullBtn)
+
+        setupTouchHandling()
+        applyVisualState()
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    private fun setupTouchHandling() {
+        // Touch handling is focused on the status label / pill drag area
+        tvDragAndStatus.setOnTouchListener { _, event ->
+            handlePillTouch(event)
+        }
+    }
+
+    private fun handlePillTouch(event: MotionEvent): Boolean {
+        when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                downRawX = event.rawX
+                downRawY = event.rawY
+                startX = posX
+                startY = posY
+                isDragging = false
+                return true
+            }
+
+            MotionEvent.ACTION_MOVE -> {
+                val dx = event.rawX - downRawX
+                val dy = event.rawY - downRawY
+                if (hypot(dx, dy) > (10 * density)) {
+                    isDragging = true
+                }
+                if (isDragging) {
+                    val metrics = resources.displayMetrics
+                    posX = (startX + dx.toInt()).coerceIn(0, (metrics.widthPixels - width).coerceAtLeast(0))
+                    posY = (startY + dy.toInt()).coerceIn(0, (metrics.heightPixels - height).coerceAtLeast(0))
+                    onPositionMoved(posX, posY)
+                }
+                return true
+            }
+
+            MotionEvent.ACTION_UP -> {
+                if (!isDragging) {
+                    if (isCollapsed) {
+                        isCollapsed = false
+                        applyVisualState()
+                        onCollapseToggled(false)
+                    } else {
+                        // Single click on the toggle opens the Quick Menu with the Hide Option!
+                        onPillTapped()
+                    }
+                }
+                isDragging = false
+                return true
+            }
+
+            MotionEvent.ACTION_CANCEL -> {
+                isDragging = false
+                return true
+            }
+        }
+        return false
+    }
+
+    fun updatePillState(mode: Int, collapsed: Boolean, x: Int, y: Int) {
+        currentMode = mode
+        isCollapsed = collapsed
+        posX = x
+        posY = y
+        applyVisualState()
+    }
+
+    private fun applyVisualState() {
+        if (isCollapsed) {
+            tvCollapseBtn.visibility = GONE
+            tvHideFullBtn.visibility = GONE
+            tvDragAndStatus.text = "WG ⚙"
+            alpha = 0.65f
+            when (currentMode) {
+                PrefManager.MODE_LOCK -> tvDragAndStatus.setTextColor(Color.parseColor("#00E676"))
+                PrefManager.MODE_EDIT -> tvDragAndStatus.setTextColor(Color.parseColor("#FF1744"))
+                else -> tvDragAndStatus.setTextColor(Color.parseColor("#9E9E9E"))
+            }
+            return
+        }
+
+        alpha = 0.95f
+        tvCollapseBtn.visibility = VISIBLE
+        tvHideFullBtn.visibility = VISIBLE
+        when (currentMode) {
+            PrefManager.MODE_LOCK -> {
+                tvDragAndStatus.text = "LOCKED ⚙"
+                tvDragAndStatus.setTextColor(Color.parseColor("#00E676"))
+            }
+            PrefManager.MODE_EDIT -> {
+                tvDragAndStatus.text = "EDIT ⚙"
+                tvDragAndStatus.setTextColor(Color.parseColor("#FF1744"))
+            }
+            PrefManager.MODE_OFF -> {
+                tvDragAndStatus.text = "GUARD OFF ⚙"
+                tvDragAndStatus.setTextColor(Color.parseColor("#9E9E9E"))
+            }
+        }
+    }
+}
+
+
+================================================================================
+FILE: app/src/main/java/com/wolver/touchguard/FloatingMenuView.kt
+PATH: C:\Users\Lenovo\WolverTouchGuard\app\src\main\java\com\wolver\touchguard\FloatingMenuView.kt
+================================================================================
+
+package com.wolver.touchguard
+
+import android.annotation.SuppressLint
+import android.content.Context
+import android.graphics.Color
+import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
+import android.util.TypedValue
+import android.view.Gravity
+import android.widget.Button
+import android.widget.FrameLayout
+import android.widget.LinearLayout
+import android.widget.TextView
+
+@SuppressLint("ViewConstructor")
+class FloatingMenuView(
+    context: Context,
+    private val onLockClicked: () -> Unit,
+    private val onEditClicked: () -> Unit,
+    private val onHideToggleClicked: () -> Unit,
+    private val onOpenAppClicked: () -> Unit,
+    private val onDismissClicked: () -> Unit
+) : FrameLayout(context) {
+
+    private val density = resources.displayMetrics.density
+
+    init {
+        // Dim background that dismisses when tapped
+        setBackgroundColor(Color.parseColor("#80000000"))
+        setOnClickListener { onDismissClicked() }
+
+        // Centered Card container
+        val card = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER_HORIZONTAL
+            val bg = GradientDrawable().apply {
+                setColor(Color.parseColor("#1A1A1A"))
+                cornerRadius = 18f * density
+                setStroke((1.5f * density).toInt(), Color.parseColor("#383838"))
+            }
+            background = bg
+            val p = (16 * density).toInt()
+            setPadding(p, p, p, p)
+            // Prevent clicks on card from dismissing
+            setOnClickListener { }
+        }
+
+        val cardParams = LayoutParams(
+            (260 * density).toInt(),
+            LayoutParams.WRAP_CONTENT
+        ).apply {
+            gravity = Gravity.CENTER
+        }
+
+        // Title
+        val tvTitle = TextView(context).apply {
+            text = "WOLVER TOUCH GUARD"
+            setTextColor(Color.WHITE)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
+            typeface = Typeface.DEFAULT_BOLD
+            gravity = Gravity.CENTER
+            setPadding(0, 0, 0, (4 * density).toInt())
+        }
+
+        val tvSub = TextView(context).apply {
+            text = "Quick Control Menu"
+            setTextColor(Color.parseColor("#888888"))
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
+            gravity = Gravity.CENTER
+            setPadding(0, 0, 0, (12 * density).toInt())
+        }
+
+        card.addView(tvTitle)
+        card.addView(tvSub)
+
+        // 1. Lock Mode Button
+        val btnLock = createMenuButton(
+            text = "🔒  Lock Mode (Silent Guard)",
+            bgColor = "#1E1E1E",
+            textColor = "#00E676"
+        ) {
+            onLockClicked()
+            onDismissClicked()
+        }
+        card.addView(btnLock)
+
+        // 2. Edit Mode Button
+        val btnEdit = createMenuButton(
+            text = "✏️  Edit Zones (Show Bars)",
+            bgColor = "#1E1E1E",
+            textColor = "#FF5252"
+        ) {
+            onEditClicked()
+            onDismissClicked()
+        }
+        card.addView(btnEdit)
+
+        // 3. HIDE TOGGLE BUTTON (Prominent Red button as requested)
+        val btnHideToggle = createMenuButton(
+            text = "🚫  HIDE THIS TOGGLE",
+            bgColor = "#FF1744",
+            textColor = "#FFFFFF",
+            isBold = true
+        ) {
+            onHideToggleClicked()
+            onDismissClicked()
+        }
+        card.addView(btnHideToggle)
+
+        // 4. Open Settings App
+        val btnOpenApp = createMenuButton(
+            text = "📱  Open App Settings",
+            bgColor = "#1E1E1E",
+            textColor = "#CCCCCC"
+        ) {
+            onOpenAppClicked()
+            onDismissClicked()
+        }
+        card.addView(btnOpenApp)
+
+        // 5. Dismiss / Close Button
+        val btnClose = createMenuButton(
+            text = "✕  Close Menu",
+            bgColor = "#141414",
+            textColor = "#777777"
+        ) {
+            onDismissClicked()
+        }
+        card.addView(btnClose)
+
+        addView(card, cardParams)
+    }
+
+    private fun createMenuButton(
+        text: String,
+        bgColor: String,
+        textColor: String,
+        isBold: Boolean = false,
+        onClick: () -> Unit
+    ): Button {
+        return Button(context).apply {
+            this.text = text
+            setTextColor(Color.parseColor(textColor))
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
+            isAllCaps = false
+            if (isBold) typeface = Typeface.DEFAULT_BOLD
+
+            val bg = GradientDrawable().apply {
+                setColor(Color.parseColor(bgColor))
+                cornerRadius = 10f * density
+                setStroke((1f * density).toInt(), Color.parseColor("#333333"))
+            }
+            background = bg
+
+            val lp = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                (42 * density).toInt()
+            ).apply {
+                setMargins(0, 0, 0, (8 * density).toInt())
+            }
+            layoutParams = lp
+
+            setOnClickListener { onClick() }
+        }
+    }
+}
+
+
+================================================================================
+FILE: app/src/main/java/com/wolver/touchguard/PrefManager.kt
+PATH: C:\Users\Lenovo\WolverTouchGuard\app\src\main\java\com\wolver\touchguard\PrefManager.kt
+================================================================================
+
+package com.wolver.touchguard
+
+import android.content.Context
+import android.content.SharedPreferences
+import org.json.JSONArray
+import org.json.JSONObject
+import java.io.File
+
+data class ZoneConfig(
+    val id: Int,
+    val title: String,
+    var enabled: Boolean,
+    var x: Int,
+    var y: Int,
+    var width: Int,
+    var height: Int
+)
+
+class PrefManager(private val context: Context) {
+
+    private val prefs: SharedPreferences =
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+
+    companion object {
+        private const val PREFS_NAME = "wolver_touch_guard_prefs"
+        private const val BACKUP_FILENAME = "wolver_touchguard_backup.json"
+
+        const val MODE_LOCK = 0
+        const val MODE_EDIT = 1
+        const val MODE_OFF = 2
+
+        const val TOTAL_ZONES = 4
+
+        private const val KEY_MASTER_ENABLED = "master_enabled"
+        private const val KEY_APP_FILTER_ENABLED = "app_filter_enabled"
+        private const val KEY_SELECTED_APPS = "selected_apps"
+        private const val KEY_CURRENT_MODE = "current_mode"
+        private const val KEY_EDIT_OPACITY = "edit_opacity"
+        private const val KEY_LOCK_BORDER = "lock_border"
+        private const val KEY_HIDE_PILL_IN_LOCK = "hide_pill_in_lock"
+        private const val KEY_HIDE_TOGGLE_ALWAYS = "hide_toggle_always"
+        private const val KEY_SHOW_OVERLAY_IN_APP = "show_overlay_in_app"
+        private const val KEY_SHOW_RADAR_PREVIEW = "show_radar_preview"
+        private const val KEY_PILL_HIDDEN_MANUALLY = "pill_hidden_manually"
+        private const val KEY_PILL_X = "pill_x"
+        private const val KEY_PILL_Y = "pill_y"
+        private const val KEY_PILL_COLLAPSED = "pill_collapsed"
+
+        val DEFAULT_TARGET_PACKAGES = setOf(
+            "com.dts.freefireth",
+            "com.dts.freefiremax"
+        )
+    }
+
+    init {
+        // Automatic restore from backup file if SharedPreferences are empty (e.g. after update or re-install)
+        if (!prefs.contains(KEY_MASTER_ENABLED)) {
+            restoreBackupFromFile()
+        }
+    }
+
+    var isMasterEnabled: Boolean
+        get() = prefs.getBoolean(KEY_MASTER_ENABLED, true)
+        set(value) {
+            prefs.edit().putBoolean(KEY_MASTER_ENABLED, value).apply()
+            saveBackupToFile()
+        }
+
+    var isAppFilterEnabled: Boolean
+        get() = prefs.getBoolean(KEY_APP_FILTER_ENABLED, true)
+        set(value) {
+            prefs.edit().putBoolean(KEY_APP_FILTER_ENABLED, value).apply()
+            saveBackupToFile()
+        }
+
+    var selectedPackages: Set<String>
+        get() {
+            val saved = prefs.getStringSet(KEY_SELECTED_APPS, null)
+            return if (saved == null) {
+                DEFAULT_TARGET_PACKAGES
+            } else {
+                HashSet(saved)
+            }
+        }
+        set(value) {
+            prefs.edit().putStringSet(KEY_SELECTED_APPS, HashSet(value)).apply()
+            saveBackupToFile()
+        }
+
+    var currentMode: Int
+        get() = prefs.getInt(KEY_CURRENT_MODE, MODE_EDIT)
+        set(value) {
+            prefs.edit().putInt(KEY_CURRENT_MODE, value).apply()
+            saveBackupToFile()
+        }
+
+    var editOpacityPercent: Int
+        get() = prefs.getInt(KEY_EDIT_OPACITY, 50).coerceIn(15, 95)
+        set(value) {
+            prefs.edit().putInt(KEY_EDIT_OPACITY, value.coerceIn(15, 95)).apply()
+            saveBackupToFile()
+        }
+
+    var showLockBorder: Boolean
+        get() = prefs.getBoolean(KEY_LOCK_BORDER, false)
+        set(value) {
+            prefs.edit().putBoolean(KEY_LOCK_BORDER, value).apply()
+            saveBackupToFile()
+        }
+
+    var hidePillInLockMode: Boolean
+        get() = prefs.getBoolean(KEY_HIDE_PILL_IN_LOCK, false)
+        set(value) {
+            prefs.edit().putBoolean(KEY_HIDE_PILL_IN_LOCK, value).apply()
+            saveBackupToFile()
+        }
+
+    var hideFloatingToggleAlways: Boolean
+        get() = prefs.getBoolean(KEY_HIDE_TOGGLE_ALWAYS, false)
+        set(value) {
+            prefs.edit().putBoolean(KEY_HIDE_TOGGLE_ALWAYS, value).apply()
+            saveBackupToFile()
+        }
+
+    var showOverlayInApp: Boolean
+        get() = prefs.getBoolean(KEY_SHOW_OVERLAY_IN_APP, true)
+        set(value) {
+            prefs.edit().putBoolean(KEY_SHOW_OVERLAY_IN_APP, value).apply()
+            saveBackupToFile()
+        }
+
+    var showRadarPreview: Boolean
+        get() = prefs.getBoolean(KEY_SHOW_RADAR_PREVIEW, true)
+        set(value) {
+            prefs.edit().putBoolean(KEY_SHOW_RADAR_PREVIEW, value).apply()
+            saveBackupToFile()
+        }
+
+    var isPillHiddenManually: Boolean
+        get() = prefs.getBoolean(KEY_PILL_HIDDEN_MANUALLY, false)
+        set(value) {
+            prefs.edit().putBoolean(KEY_PILL_HIDDEN_MANUALLY, value).apply()
+            saveBackupToFile()
+        }
+
+    var pillX: Int
+        get() = prefs.getInt(KEY_PILL_X, 950)
+        set(value) {
+            prefs.edit().putInt(KEY_PILL_X, value).apply()
+            saveBackupToFile()
+        }
+
+    var pillY: Int
+        get() = prefs.getInt(KEY_PILL_Y, 24)
+        set(value) {
+            prefs.edit().putInt(KEY_PILL_Y, value).apply()
+            saveBackupToFile()
+        }
+
+    var isPillCollapsed: Boolean
+        get() = prefs.getBoolean(KEY_PILL_COLLAPSED, false)
+        set(value) {
+            prefs.edit().putBoolean(KEY_PILL_COLLAPSED, value).apply()
+            saveBackupToFile()
+        }
+
+    fun isZoneEnabled(zoneId: Int): Boolean {
+        val defaultOn = zoneId <= 3
+        return prefs.getBoolean("zone_${zoneId}_enabled", defaultOn)
+    }
+
+    fun setZoneEnabled(zoneId: Int, enabled: Boolean) {
+        prefs.edit().putBoolean("zone_${zoneId}_enabled", enabled).apply()
+        saveBackupToFile()
+    }
+
+    fun getZoneConfig(zoneId: Int): ZoneConfig {
+        val defaultX: Int
+        val defaultY: Int
+        val defaultW: Int
+        val defaultH: Int
+        val title: String
+
+        when (zoneId) {
+            1 -> {
+                title = "Z1: Left Edge & Palm"
+                defaultX = 0
+                defaultY = 0
+                defaultW = 220
+                defaultH = 600
+            }
+            2 -> {
+                title = "Z2: Top Bar & Call Guard"
+                defaultX = 220
+                defaultY = 0
+                defaultW = 1650
+                defaultH = 85
+            }
+            3 -> {
+                title = "Z3: Below 3rd-Finger"
+                defaultX = 220
+                defaultY = 270
+                defaultW = 420
+                defaultH = 330
+            }
+            else -> {
+                title = "Z4: Right of 3rd-Finger"
+                defaultX = 460
+                defaultY = 85
+                defaultW = 380
+                defaultH = 515
+            }
+        }
+
+        return ZoneConfig(
+            id = zoneId,
+            title = title,
+            enabled = isZoneEnabled(zoneId),
+            x = prefs.getInt("zone_${zoneId}_x", defaultX).coerceAtLeast(0),
+            y = prefs.getInt("zone_${zoneId}_y", defaultY).coerceAtLeast(0),
+            width = prefs.getInt("zone_${zoneId}_w", defaultW).coerceAtLeast(40),
+            height = prefs.getInt("zone_${zoneId}_h", defaultH).coerceAtLeast(35)
+        )
+    }
+
+    fun saveZoneBounds(zoneId: Int, x: Int, y: Int, width: Int, height: Int) {
+        prefs.edit()
+            .putInt("zone_${zoneId}_x", x.coerceAtLeast(0))
+            .putInt("zone_${zoneId}_y", y.coerceAtLeast(0))
+            .putInt("zone_${zoneId}_w", width.coerceAtLeast(40))
+            .putInt("zone_${zoneId}_h", height.coerceAtLeast(35))
+            .apply()
+        saveBackupToFile()
+    }
+
+    fun resetZonesToDefaults() {
+        val editor = prefs.edit()
+        for (id in 1..TOTAL_ZONES) {
+            editor.remove("zone_${id}_x")
+            editor.remove("zone_${id}_y")
+            editor.remove("zone_${id}_w")
+            editor.remove("zone_${id}_h")
+            editor.putBoolean("zone_${id}_enabled", id <= 3)
+        }
+        editor.putInt(KEY_PILL_X, 950)
+        editor.putInt(KEY_PILL_Y, 24)
+        editor.putBoolean(KEY_PILL_COLLAPSED, false)
+        editor.putBoolean(KEY_PILL_HIDDEN_MANUALLY, false)
+        editor.putBoolean(KEY_HIDE_TOGGLE_ALWAYS, false)
+        editor.putBoolean(KEY_SHOW_OVERLAY_IN_APP, true)
+        editor.apply()
+        saveBackupToFile()
+    }
+
+    // ==========================================
+    // PERSISTENT DATA BACKUP & RESTORE SYSTEM
+    // Ensures zone coordinates are NEVER lost on update!
+    // ==========================================
+
+    private fun getBackupFiles(): List<File> {
+        val files = mutableListOf<File>()
+        try {
+            files.add(File(context.filesDir, BACKUP_FILENAME))
+            val extDir = context.getExternalFilesDir(null)
+            if (extDir != null) {
+                files.add(File(extDir, BACKUP_FILENAME))
+            }
+        } catch (_: Exception) {
+        }
+        return files
+    }
+
+    @Synchronized
+    fun saveBackupToFile() {
+        Thread {
+            try {
+                val json = JSONObject()
+                json.put("master_enabled", isMasterEnabled)
+                json.put("app_filter_enabled", isAppFilterEnabled)
+                json.put("edit_opacity", editOpacityPercent)
+                json.put("lock_border", showLockBorder)
+                json.put("hide_toggle_always", hideFloatingToggleAlways)
+                json.put("show_overlay_in_app", showOverlayInApp)
+                json.put("pill_x", pillX)
+                json.put("pill_y", pillY)
+
+                val appsArray = JSONArray()
+                selectedPackages.forEach { appsArray.put(it) }
+                json.put("selected_apps", appsArray)
+
+                val zonesArray = JSONArray()
+                for (id in 1..TOTAL_ZONES) {
+                    val cfg = getZoneConfig(id)
+                    val zObj = JSONObject().apply {
+                        put("id", cfg.id)
+                        put("enabled", cfg.enabled)
+                        put("x", cfg.x)
+                        put("y", cfg.y)
+                        put("w", cfg.width)
+                        put("h", cfg.height)
+                    }
+                    zonesArray.put(zObj)
+                }
+                json.put("zones", zonesArray)
+
+                val content = json.toString(2)
+                for (f in getBackupFiles()) {
+                    f.writeText(content)
+                }
+            } catch (_: Exception) {
+            }
+        }.start()
+    }
+
+    @Synchronized
+    fun restoreBackupFromFile(): Boolean {
+        try {
+            for (f in getBackupFiles()) {
+                if (f.exists() && f.length() > 10) {
+                    val content = f.readText()
+                    val json = JSONObject(content)
+                    val editor = prefs.edit()
+
+                    if (json.has("master_enabled")) {
+                        editor.putBoolean(KEY_MASTER_ENABLED, json.getBoolean("master_enabled"))
+                    }
+                    if (json.has("app_filter_enabled")) {
+                        editor.putBoolean(KEY_APP_FILTER_ENABLED, json.getBoolean("app_filter_enabled"))
+                    }
+                    if (json.has("edit_opacity")) {
+                        editor.putInt(KEY_EDIT_OPACITY, json.getInt("edit_opacity"))
+                    }
+                    if (json.has("hide_toggle_always")) {
+                        editor.putBoolean(KEY_HIDE_TOGGLE_ALWAYS, json.getBoolean("hide_toggle_always"))
+                    }
+                    if (json.has("pill_x")) {
+                        editor.putInt(KEY_PILL_X, json.getInt("pill_x"))
+                    }
+                    if (json.has("pill_y")) {
+                        editor.putInt(KEY_PILL_Y, json.getInt("pill_y"))
+                    }
+
+                    if (json.has("zones")) {
+                        val zonesArray = json.getJSONArray("zones")
+                        for (i in 0 until zonesArray.length()) {
+                            val zObj = zonesArray.getJSONObject(i)
+                            val id = zObj.getInt("id")
+                            editor.putBoolean("zone_${id}_enabled", zObj.getBoolean("enabled"))
+                            editor.putInt("zone_${id}_x", zObj.getInt("x"))
+                            editor.putInt("zone_${id}_y", zObj.getInt("y"))
+                            editor.putInt("zone_${id}_w", zObj.getInt("w"))
+                            editor.putInt("zone_${id}_h", zObj.getInt("h"))
+                        }
+                    }
+
+                    editor.apply()
+                    return true
+                }
+            }
+        } catch (_: Exception) {
+        }
+        return false
+    }
+}
+
+
+================================================================================
+FILE: app/src/main/java/com/wolver/touchguard/UpdateManager.kt
+PATH: C:\Users\Lenovo\WolverTouchGuard\app\src\main\java\com\wolver\touchguard\UpdateManager.kt
+================================================================================
+
+package com.wolver.touchguard
+
+import android.app.Activity
+import android.app.AlertDialog
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.Handler
+import android.os.Looper
+import org.json.JSONObject
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.net.HttpURLConnection
+import java.net.URL
+
+object UpdateManager {
+
+    private const val VERSION_CHECK_URL =
+        "https://raw.githubusercontent.com/Wolverh/WolverTouchGuard/main/version.json"
+
+    data class UpdateInfo(
+        val hasUpdate: Boolean,
+        val latestVersionCode: Int,
+        val latestVersionName: String,
+        val downloadUrl: String,
+        val changelog: String
+    )
+
+    fun check(context: Context, callback: (UpdateInfo?) -> Unit) {
+        val mainHandler = Handler(Looper.getMainLooper())
+
+        Thread {
+            try {
+                val url = URL(VERSION_CHECK_URL)
+                val conn = url.openConnection() as HttpURLConnection
+                conn.connectTimeout = 8000
+                conn.readTimeout = 8000
+                conn.requestMethod = "GET"
+                conn.useCaches = false
+
+                if (conn.responseCode == 200) {
+                    val reader = BufferedReader(InputStreamReader(conn.inputStream))
+                    val response = reader.readText()
+                    reader.close()
+
+                    val json = JSONObject(response)
+                    val remoteCode = json.optInt("versionCode", 0)
+                    val remoteName = json.optString("versionName", "")
+                    val downloadUrl = json.optString("downloadUrl", "")
+                    val changelog = json.optString("changelog", "Bug fixes and improvements")
+
+                    val currentCode = BuildConfig.VERSION_CODE
+                    val hasUpdate = remoteCode > currentCode
+
+                    val info = UpdateInfo(
+                        hasUpdate = hasUpdate,
+                        latestVersionCode = remoteCode,
+                        latestVersionName = remoteName,
+                        downloadUrl = downloadUrl,
+                        changelog = changelog
+                    )
+
+                    mainHandler.post { callback(info) }
+                } else {
+                    mainHandler.post { callback(null) }
+                }
+            } catch (_: Exception) {
+                mainHandler.post { callback(null) }
+            }
+        }.start()
+    }
+
+    fun showUpdateDialog(activity: Activity, info: UpdateInfo) {
+        AlertDialog.Builder(activity)
+            .setTitle("🚀 New Update Available (v${info.latestVersionName})")
+            .setMessage("${info.changelog}\n\nClick 'Update Now' to download and install with 1-click.")
+            .setPositiveButton("Update Now") { _, _ ->
+                try {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(info.downloadUrl))
+                    activity.startActivity(intent)
+                } catch (_: Exception) {
+                }
+            }
+            .setNegativeButton("Later", null)
+            .show()
+    }
+}
