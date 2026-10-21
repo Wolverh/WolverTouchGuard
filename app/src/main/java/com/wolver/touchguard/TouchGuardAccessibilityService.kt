@@ -1,10 +1,12 @@
-package com.wolver.touchguard
+﻿package com.wolver.touchguard
 
 import android.accessibilityservice.AccessibilityService
 import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.PixelFormat
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.view.Gravity
 import android.view.KeyEvent
 import android.view.MotionEvent
@@ -28,12 +30,14 @@ class TouchGuardAccessibilityService : AccessibilityService() {
             "com.transsion.xarena",
             "com.transsion.smartpanel",
             "com.transsion.kolun.assistant",
-            "com.google.android.inputmethod.latin"
+            "com.google.android.inputmethod.latin",
+            "com.android.permissioncontroller"
         )
     }
 
     private lateinit var prefManager: PrefManager
     private lateinit var windowManager: WindowManager
+    private val mainHandler = Handler(Looper.getMainLooper())
 
     private val zoneViews = mutableMapOf<Int, ZoneOverlayView>()
     private val zoneParams = mutableMapOf<Int, WindowManager.LayoutParams>()
@@ -44,6 +48,7 @@ class TouchGuardAccessibilityService : AccessibilityService() {
     private var menuView: FloatingMenuView? = null
 
     private var currentForegroundPackage: String = ""
+    private var lastDetectedGamePackage: String = ""
     private var overlaysAttached = false
 
     private var volUpPressed = false
@@ -61,22 +66,48 @@ class TouchGuardAccessibilityService : AccessibilityService() {
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event == null) return
 
-        if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED ||
-            event.eventType == AccessibilityEvent.TYPE_WINDOWS_CHANGED
-        ) {
-            val detectedPkg = resolveActiveApplicationPackage(event)
-            if (detectedPkg.isNotEmpty() && detectedPkg != currentForegroundPackage) {
-                currentForegroundPackage = detectedPkg
-                refreshOverlaysVisibilityAndState()
+        val detectedPkg = resolveActiveApplicationPackage(event)
+        if (detectedPkg.isNotEmpty() && detectedPkg != currentForegroundPackage) {
+            val previousPkg = currentForegroundPackage
+            currentForegroundPackage = detectedPkg
+
+            val targetGames = prefManager.selectedPackages
+            val isTargetGameNow = targetGames.contains(detectedPkg)
+            val wasTargetGameBefore = targetGames.contains(previousPkg)
+
+            // Instant Free Fire / Game Launch Auto-Activation!
+            if (isTargetGameNow && !wasTargetGameBefore) {
+                lastDetectedGamePackage = detectedPkg
+                if (prefManager.isAutoLockOnGameLaunch) {
+                    prefManager.isMasterEnabled = true
+                    if (prefManager.currentMode == PrefManager.MODE_OFF) {
+                        prefManager.currentMode = PrefManager.MODE_LOCK
+                    }
+                    Toast.makeText(
+                        this,
+                        "⚡ Wolver Touch Guard Auto-Activated for Game!",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
             }
+
+            refreshOverlaysVisibilityAndState()
         }
     }
 
     private fun resolveActiveApplicationPackage(event: AccessibilityEvent): String {
+        val targetPackages = prefManager.selectedPackages
+
+        // 1. Check event package directly first for instant Free Fire detection
+        val directEventPkg = event.packageName?.toString().orEmpty()
+        if (directEventPkg.isNotEmpty() && targetPackages.contains(directEventPkg)) {
+            return directEventPkg
+        }
+
+        // 2. Inspect interactive windows on screen
         try {
             val interactiveWindows = windows
             if (!interactiveWindows.isNullOrEmpty()) {
-                val targetPackages = prefManager.selectedPackages
                 for (win in interactiveWindows) {
                     if (win.type == AccessibilityWindowInfo.TYPE_APPLICATION) {
                         val pkg = win.root?.packageName?.toString().orEmpty()
@@ -96,9 +127,7 @@ class TouchGuardAccessibilityService : AccessibilityService() {
                 for (win in interactiveWindows) {
                     if (win.type == AccessibilityWindowInfo.TYPE_APPLICATION) {
                         val pkg = win.root?.packageName?.toString().orEmpty()
-                        if (pkg.isNotEmpty() &&
-                            !IGNORED_TRANSIENT_PACKAGES.contains(pkg)
-                        ) {
+                        if (pkg.isNotEmpty() && !IGNORED_TRANSIENT_PACKAGES.contains(pkg)) {
                             return pkg
                         }
                     }
@@ -107,11 +136,8 @@ class TouchGuardAccessibilityService : AccessibilityService() {
         } catch (_: Exception) {
         }
 
-        val eventPkg = event.packageName?.toString().orEmpty()
-        if (eventPkg.isNotEmpty() &&
-            !IGNORED_TRANSIENT_PACKAGES.contains(eventPkg)
-        ) {
-            return eventPkg
+        if (directEventPkg.isNotEmpty() && !IGNORED_TRANSIENT_PACKAGES.contains(directEventPkg)) {
+            return directEventPkg
         }
 
         return currentForegroundPackage
@@ -130,11 +156,11 @@ class TouchGuardAccessibilityService : AccessibilityService() {
             volUpPressed = false
             volDownPressed = false
 
-            // Vol Up + Vol Down immediately unhides toggle if hidden, or switches modes
+            // Vol Up + Vol Down always restores the floating toggle if hidden!
             if (prefManager.hideFloatingToggleAlways || prefManager.isPillHiddenManually) {
                 prefManager.hideFloatingToggleAlways = false
                 prefManager.isPillHiddenManually = false
-                Toast.makeText(this, "Floating toggle unhidden!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "🔘 Floating Toggle Restored!", Toast.LENGTH_SHORT).show()
             } else {
                 val nextMode = if (prefManager.currentMode == PrefManager.MODE_LOCK) {
                     PrefManager.MODE_EDIT
@@ -142,6 +168,8 @@ class TouchGuardAccessibilityService : AccessibilityService() {
                     PrefManager.MODE_LOCK
                 }
                 prefManager.currentMode = nextMode
+                val modeName = if (nextMode == PrefManager.MODE_LOCK) "LOCK MODE (Blocking ON)" else "EDIT MODE"
+                Toast.makeText(this, modeName, Toast.LENGTH_SHORT).show()
             }
             refreshOverlaysVisibilityAndState()
             return true
@@ -151,7 +179,19 @@ class TouchGuardAccessibilityService : AccessibilityService() {
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
+        // When rotating to Landscape (e.g., launching Free Fire), refresh immediately
+        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE && prefManager.isAutoLandscapeEnabled) {
+            if (prefManager.currentMode == PrefManager.MODE_OFF) {
+                prefManager.currentMode = PrefManager.MODE_LOCK
+            }
+        }
         refreshOverlaysVisibilityAndState()
+    }
+
+    fun showFloatingMenuFromApp() {
+        mainHandler.post {
+            showFloatingMenu()
+        }
     }
 
     private fun showFloatingMenu() {
@@ -159,25 +199,19 @@ class TouchGuardAccessibilityService : AccessibilityService() {
 
         val menu = FloatingMenuView(
             context = this,
-            onLockClicked = {
-                prefManager.currentMode = PrefManager.MODE_LOCK
+            prefManager = prefManager,
+            onStateChanged = {
                 refreshOverlaysVisibilityAndState()
-                Toast.makeText(this, "Lock Mode Active (Touch Blocking ON)", Toast.LENGTH_SHORT).show()
             },
-            onEditClicked = {
-                prefManager.currentMode = PrefManager.MODE_EDIT
-                prefManager.showOverlayInApp = true
-                refreshOverlaysVisibilityAndState()
-                Toast.makeText(this, "Edit Mode Active (Bars Visible)", Toast.LENGTH_SHORT).show()
-            },
-            onHideToggleClicked = {
-                // Completely hide toggle when chosen from menu
-                prefManager.hideFloatingToggleAlways = true
+            onHideToggleOnlyClicked = {
+                // Hide ONLY the toggle pill; keep blockage zones 100% ACTIVE!
                 prefManager.isPillHiddenManually = true
+                prefManager.hideFloatingToggleAlways = true
+                prefManager.currentMode = PrefManager.MODE_LOCK
                 refreshOverlaysVisibilityAndState()
                 Toast.makeText(
                     this,
-                    "Floating toggle is now HIDDEN. Re-enable in app or press Vol Up + Vol Down.",
+                    "🚫 Toggle Hidden! Touch Blocking is 100% ACTIVE. (Press Vol Up + Vol Down to unhide)",
                     Toast.LENGTH_LONG
                 ).show()
             },
@@ -199,7 +233,8 @@ class TouchGuardAccessibilityService : AccessibilityService() {
             WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
-            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
                     WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
             PixelFormat.TRANSLUCENT
         )
@@ -248,16 +283,15 @@ class TouchGuardAccessibilityService : AccessibilityService() {
                 }
             )
 
-            // Touch forwarding: ensures clicking the toggle always works even if inside a blocked zone!
             view.isPillAt = { rawX, rawY ->
                 val pill = pillView
                 if (pill != null && pill.visibility == View.VISIBLE) {
                     val loc = IntArray(2)
                     pill.getLocationOnScreen(loc)
-                    val pLeft = loc[0].toFloat()
-                    val pTop = loc[1].toFloat()
-                    val pRight = pLeft + pill.width.toFloat()
-                    val pBottom = pTop + pill.height.toFloat()
+                    val pLeft = loc[0].toFloat() - 8f
+                    val pTop = loc[1].toFloat() - 8f
+                    val pRight = pLeft + pill.width.toFloat() + 16f
+                    val pBottom = pTop + pill.height.toFloat() + 16f
                     rawX in pLeft..pRight && rawY in pTop..pBottom
                 } else {
                     false
@@ -296,7 +330,6 @@ class TouchGuardAccessibilityService : AccessibilityService() {
         val pill = FloatingPillView(
             context = this,
             onPillTapped = {
-                // Clicking the toggle shows the Quick Menu with [Hide Toggle] option!
                 showFloatingMenu()
             },
             onCollapseToggled = { collapsed ->
@@ -304,13 +337,14 @@ class TouchGuardAccessibilityService : AccessibilityService() {
                 refreshOverlaysVisibilityAndState()
             },
             onHideCompletelyClicked = {
-                // Clicking ✕ on the pill hides it completely!
+                // Clicking ✕ on the pill hides ONLY the pill and locks touch blocking ON!
                 prefManager.hideFloatingToggleAlways = true
                 prefManager.isPillHiddenManually = true
+                prefManager.currentMode = PrefManager.MODE_LOCK
                 refreshOverlaysVisibilityAndState()
                 Toast.makeText(
                     this,
-                    "Floating toggle HIDDEN. Re-enable in app or press Vol Up + Vol Down.",
+                    "🚫 Toggle Hidden! Touch Blocking remains ACTIVE. (Vol Up + Vol Down to unhide)",
                     Toast.LENGTH_LONG
                 ).show()
             },
@@ -388,6 +422,12 @@ class TouchGuardAccessibilityService : AccessibilityService() {
     }
 
     fun refreshOverlaysVisibilityAndState() {
+        mainHandler.post {
+            refreshInternal()
+        }
+    }
+
+    private fun refreshInternal() {
         if (!overlaysAttached) {
             createOverlayViews()
         }
@@ -397,16 +437,26 @@ class TouchGuardAccessibilityService : AccessibilityService() {
         val allowedPackages = prefManager.selectedPackages
         val mode = prefManager.currentMode
 
-        val isSelfApp = (currentForegroundPackage == packageName) || (currentForegroundPackage.isEmpty())
-        val shouldShowForCurrentApp = if (isSelfApp) {
+        val isLandscape = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+        val isSelfApp = (currentForegroundPackage == packageName)
+
+        // Determine if overlays should be active right now:
+        // 1. Inside our own config app: show if user enabled "View Blockage Bars" OR if in Edit mode.
+        // 2. Outside our config app:
+        //    - If App Filter is OFF -> Always active!
+        //    - If App Filter is ON -> Active if current package is in allowedPackages OR if device is in Landscape mode and Auto-Landscape is enabled!
+        val shouldActivateZones = if (!masterOn) {
+            false
+        } else if (isSelfApp) {
             prefManager.showOverlayInApp || (mode == PrefManager.MODE_EDIT)
         } else if (!filterOn) {
             true
         } else {
-            currentForegroundPackage.isNotEmpty() && allowedPackages.contains(currentForegroundPackage)
+            val pkgMatch = currentForegroundPackage.isNotEmpty() && allowedPackages.contains(currentForegroundPackage)
+            val landscapeGameMatch = isLandscape && prefManager.isAutoLandscapeEnabled
+            pkgMatch || landscapeGameMatch
         }
 
-        val activeOverall = masterOn && shouldShowForCurrentApp
         val opacity = prefManager.editOpacityPercent
         val lockBorder = prefManager.showLockBorder
 
@@ -415,7 +465,8 @@ class TouchGuardAccessibilityService : AccessibilityService() {
             val params = zoneParams[zoneId] ?: continue
             val cfg = prefManager.getZoneConfig(zoneId)
 
-            if (!activeOverall || !cfg.enabled || mode == PrefManager.MODE_OFF) {
+            // CRITICAL FIX: Zone blocking is strictly independent of whether the toggle pill is hidden!
+            if (!shouldActivateZones || !cfg.enabled || mode == PrefManager.MODE_OFF) {
                 view.visibility = View.GONE
             } else {
                 view.visibility = View.VISIBLE
@@ -424,6 +475,8 @@ class TouchGuardAccessibilityService : AccessibilityService() {
                 params.width = cfg.width
                 params.height = cfg.height
 
+                // Inside MainActivity while in Lock Mode, let user click MainActivity buttons without getting blocked,
+                // EXCEPT outside MainActivity (in Free Fire / games) where zones MUST ALWAYS intercept touches!
                 if (isSelfApp && mode == PrefManager.MODE_LOCK) {
                     params.flags = params.flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
                 } else {
@@ -447,6 +500,7 @@ class TouchGuardAccessibilityService : AccessibilityService() {
             }
         }
 
+        // Floating Toggle Pill visibility (completely independent from Zone Blocking!)
         pillView?.let { pill ->
             val pParams = pillParams ?: return@let
             val shouldHidePill =
@@ -454,7 +508,9 @@ class TouchGuardAccessibilityService : AccessibilityService() {
                 prefManager.isPillHiddenManually ||
                 (mode == PrefManager.MODE_LOCK && prefManager.hidePillInLockMode)
 
-            if (!activeOverall || shouldHidePill) {
+            val canShowPillInContext = masterOn && (shouldActivateZones || isSelfApp)
+
+            if (!canShowPillInContext || shouldHidePill) {
                 pill.visibility = View.GONE
                 dismissFloatingMenu()
             } else {

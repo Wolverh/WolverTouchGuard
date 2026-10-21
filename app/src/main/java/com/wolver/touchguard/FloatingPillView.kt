@@ -1,4 +1,4 @@
-package com.wolver.touchguard
+﻿package com.wolver.touchguard
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -26,7 +26,7 @@ class FloatingPillView(
     private val tvCollapseBtn: TextView
     private val tvHideFullBtn: TextView
 
-    private var currentMode: Int = PrefManager.MODE_EDIT
+    private var currentMode: Int = PrefManager.MODE_LOCK
     private var isCollapsed: Boolean = false
 
     private var posX: Int = 950
@@ -42,9 +42,9 @@ class FloatingPillView(
         gravity = Gravity.CENTER_VERTICAL
 
         val bg = GradientDrawable().apply {
-            setColor(Color.parseColor("#EE121212"))
-            cornerRadius = 20f * density
-            setStroke((1.5f * density).toInt(), Color.parseColor("#88FFFFFF"))
+            setColor(Color.parseColor("#F2101010"))
+            cornerRadius = 22f * density
+            setStroke((1.8f * density).toInt(), Color.parseColor("#9900E676"))
         }
         background = bg
         val padH = (12 * density).toInt()
@@ -56,17 +56,17 @@ class FloatingPillView(
             typeface = Typeface.DEFAULT_BOLD
             setTextColor(Color.WHITE)
             gravity = Gravity.CENTER
-            setPadding((4 * density).toInt(), (2 * density).toInt(), (6 * density).toInt(), (2 * density).toInt())
+            setPadding((6 * density).toInt(), (4 * density).toInt(), (8 * density).toInt(), (4 * density).toInt())
         }
 
         tvCollapseBtn = TextView(context).apply {
             text = " – "
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
             typeface = Typeface.DEFAULT_BOLD
-            setTextColor(Color.parseColor("#B0B0B0"))
+            setTextColor(Color.parseColor("#E0E0E0"))
             gravity = Gravity.CENTER
-            val p = (6 * density).toInt()
-            setPadding(p, 0, p, 0)
+            val p = (8 * density).toInt()
+            setPadding(p, (2 * density).toInt(), p, (2 * density).toInt())
             setOnClickListener {
                 isCollapsed = !isCollapsed
                 applyVisualState()
@@ -76,12 +76,12 @@ class FloatingPillView(
 
         tvHideFullBtn = TextView(context).apply {
             text = " ✕ "
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
             typeface = Typeface.DEFAULT_BOLD
             setTextColor(Color.parseColor("#FF5252"))
             gravity = Gravity.CENTER
-            val p = (6 * density).toInt()
-            setPadding(p, 0, p, 0)
+            val p = (8 * density).toInt()
+            setPadding(p, (2 * density).toInt(), p, (2 * density).toInt())
             setOnClickListener {
                 onHideCompletelyClicked()
             }
@@ -97,13 +97,15 @@ class FloatingPillView(
 
     @SuppressLint("ClickableViewAccessibility")
     private fun setupTouchHandling() {
-        // Touch handling is focused on the status label / pill drag area
         tvDragAndStatus.setOnTouchListener { _, event ->
-            handlePillTouch(event)
+            handleDragOrTap(event)
+        }
+        this.setOnTouchListener { _, event ->
+            handleDragOrTap(event)
         }
     }
 
-    private fun handlePillTouch(event: MotionEvent): Boolean {
+    private fun handleDragOrTap(event: MotionEvent): Boolean {
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
                 downRawX = event.rawX
@@ -117,13 +119,15 @@ class FloatingPillView(
             MotionEvent.ACTION_MOVE -> {
                 val dx = event.rawX - downRawX
                 val dy = event.rawY - downRawY
-                if (hypot(dx, dy) > (10 * density)) {
+                if (hypot(dx, dy) > (8 * density)) {
                     isDragging = true
                 }
                 if (isDragging) {
                     val metrics = resources.displayMetrics
-                    posX = (startX + dx.toInt()).coerceIn(0, (metrics.widthPixels - width).coerceAtLeast(0))
-                    posY = (startY + dy.toInt()).coerceIn(0, (metrics.heightPixels - height).coerceAtLeast(0))
+                    val maxW = (metrics.widthPixels - width).coerceAtLeast(0)
+                    val maxH = (metrics.heightPixels - height).coerceAtLeast(0)
+                    posX = (startX + dx.toInt()).coerceIn(0, maxW)
+                    posY = (startY + dy.toInt()).coerceIn(0, maxH)
                     onPositionMoved(posX, posY)
                 }
                 return true
@@ -136,7 +140,6 @@ class FloatingPillView(
                         applyVisualState()
                         onCollapseToggled(false)
                     } else {
-                        // Single click on the toggle opens the Quick Menu with the Hide Option!
                         onPillTapped()
                     }
                 }
@@ -161,34 +164,47 @@ class FloatingPillView(
     }
 
     private fun applyVisualState() {
+        val bg = background as? GradientDrawable
         if (isCollapsed) {
             tvCollapseBtn.visibility = GONE
             tvHideFullBtn.visibility = GONE
             tvDragAndStatus.text = "WG ⚙"
-            alpha = 0.65f
+            alpha = 0.75f
             when (currentMode) {
-                PrefManager.MODE_LOCK -> tvDragAndStatus.setTextColor(Color.parseColor("#00E676"))
-                PrefManager.MODE_EDIT -> tvDragAndStatus.setTextColor(Color.parseColor("#FF1744"))
-                else -> tvDragAndStatus.setTextColor(Color.parseColor("#9E9E9E"))
+                PrefManager.MODE_LOCK -> {
+                    tvDragAndStatus.setTextColor(Color.parseColor("#00E676"))
+                    bg?.setStroke((1.5f * density).toInt(), Color.parseColor("#00E676"))
+                }
+                PrefManager.MODE_EDIT -> {
+                    tvDragAndStatus.setTextColor(Color.parseColor("#FF1744"))
+                    bg?.setStroke((1.5f * density).toInt(), Color.parseColor("#FF1744"))
+                }
+                else -> {
+                    tvDragAndStatus.setTextColor(Color.parseColor("#9E9E9E"))
+                    bg?.setStroke((1.5f * density).toInt(), Color.parseColor("#666666"))
+                }
             }
             return
         }
 
-        alpha = 0.95f
+        alpha = 0.96f
         tvCollapseBtn.visibility = VISIBLE
         tvHideFullBtn.visibility = VISIBLE
         when (currentMode) {
             PrefManager.MODE_LOCK -> {
-                tvDragAndStatus.text = "LOCKED ⚙"
+                tvDragAndStatus.text = "🔒 LOCKED (Menu)"
                 tvDragAndStatus.setTextColor(Color.parseColor("#00E676"))
+                bg?.setStroke((1.8f * density).toInt(), Color.parseColor("#00E676"))
             }
             PrefManager.MODE_EDIT -> {
-                tvDragAndStatus.text = "EDIT ⚙"
+                tvDragAndStatus.text = "✏️ EDITING (Menu)"
                 tvDragAndStatus.setTextColor(Color.parseColor("#FF1744"))
+                bg?.setStroke((1.8f * density).toInt(), Color.parseColor("#FF1744"))
             }
             PrefManager.MODE_OFF -> {
-                tvDragAndStatus.text = "GUARD OFF ⚙"
-                tvDragAndStatus.setTextColor(Color.parseColor("#9E9E9E"))
+                tvDragAndStatus.text = "⏸️ PAUSED (Menu)"
+                tvDragAndStatus.setTextColor(Color.parseColor("#FFB300"))
+                bg?.setStroke((1.8f * density).toInt(), Color.parseColor("#FFB300"))
             }
         }
     }

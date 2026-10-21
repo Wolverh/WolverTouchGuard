@@ -1,4 +1,4 @@
-name: Build Wolver Touch Guard APK
+﻿name: Build Wolver Touch Guard APK
 
 on:
   push:
@@ -22,13 +22,28 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Ensure Keystore Exists
+        run: |
+          if [ ! -f "app/release.p12" ]; then
+            keytool -genkeypair -v \
+              -keystore app/release.p12 \
+              -storetype PKCS12 \
+              -storepass wolver123 \
+              -keypass wolver123 \
+              -alias wolver \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -dname "CN=Wolver, OU=DevCode, O=Wolver, L=KafrElSheikh, S=EG, C=EG"
+          fi
+
       - name: Setup Gradle 8.9
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
 
-      - name: Compile Debug APK
-        run: gradle assembleDebug --stacktrace
+      - name: Compile Signed APK
+        run: gradle assembleDebug assembleRelease --stacktrace
 
       - name: Upload Ready-to-Install APK
         uses: actions/upload-artifact@v4
@@ -44,5 +59,5 @@ jobs:
           git tag -d latest || true
           git push origin :refs/tags/latest || true
           gh release create latest app/build/outputs/apk/debug/app-debug.apk \
-            --title "Wolver Touch Guard Latest" \
-            --notes "Automatic build supporting one-click in-app updates."
+            --title "Wolver Touch Guard v4.0.0 Latest" \
+            --notes "Direct in-app update ready. Signed with permanent release key."

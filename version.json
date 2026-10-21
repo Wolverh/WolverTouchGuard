@@ -1,6 +1,6 @@
-{
-  "versionCode": 5,
-  "versionName": "3.0.0",
+﻿{
+  "versionCode": 6,
+  "versionName": "4.0.0",
   "downloadUrl": "https://github.com/Wolverh/WolverTouchGuard/releases/download/latest/app-debug.apk",
-  "changelog": "v3.0.0 Permanent Fixed Keystore: Solved package conflict error permanently with permanent signing key and fresh package com.wolver.touchguard.pro. Future updates update in-place without conflicts."
+  "changelog": "v4.0.0 Major Overhaul:\n• Fixed Direct In-App APK Downloader & Installer (no browser redirect, zero package conflict).\n• Fixed Lock Mode touch blockage staying 100% active when toggle is hidden.\n• Added Instant Free Fire & Landscape Auto-Activation.\n• Added 6 Independent Zones with full In-Game Control Menu to toggle/exclude individual blocks and fine-tune dimensions directly inside the game."
 }

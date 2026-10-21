@@ -1,4 +1,4 @@
-package com.wolver.touchguard
+﻿package com.wolver.touchguard
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -23,16 +23,18 @@ class PrefManager(private val context: Context) {
 
     companion object {
         private const val PREFS_NAME = "wolver_touch_guard_prefs"
-        private const val BACKUP_FILENAME = "wolver_touchguard_backup.json"
+        private const val BACKUP_FILENAME = "wolver_touchguard_backup_v4.json"
 
         const val MODE_LOCK = 0
         const val MODE_EDIT = 1
         const val MODE_OFF = 2
 
-        const val TOTAL_ZONES = 4
+        const val TOTAL_ZONES = 6
 
         private const val KEY_MASTER_ENABLED = "master_enabled"
         private const val KEY_APP_FILTER_ENABLED = "app_filter_enabled"
+        private const val KEY_AUTO_LANDSCAPE_ENABLE = "auto_landscape_enable"
+        private const val KEY_AUTO_LOCK_ON_GAME_LAUNCH = "auto_lock_on_game_launch"
         private const val KEY_SELECTED_APPS = "selected_apps"
         private const val KEY_CURRENT_MODE = "current_mode"
         private const val KEY_EDIT_OPACITY = "edit_opacity"
@@ -40,7 +42,6 @@ class PrefManager(private val context: Context) {
         private const val KEY_HIDE_PILL_IN_LOCK = "hide_pill_in_lock"
         private const val KEY_HIDE_TOGGLE_ALWAYS = "hide_toggle_always"
         private const val KEY_SHOW_OVERLAY_IN_APP = "show_overlay_in_app"
-        private const val KEY_SHOW_RADAR_PREVIEW = "show_radar_preview"
         private const val KEY_PILL_HIDDEN_MANUALLY = "pill_hidden_manually"
         private const val KEY_PILL_X = "pill_x"
         private const val KEY_PILL_Y = "pill_y"
@@ -53,7 +54,6 @@ class PrefManager(private val context: Context) {
     }
 
     init {
-        // Automatic restore from backup file if SharedPreferences are empty (e.g. after update or re-install)
         if (!prefs.contains(KEY_MASTER_ENABLED)) {
             restoreBackupFromFile()
         }
@@ -73,10 +73,24 @@ class PrefManager(private val context: Context) {
             saveBackupToFile()
         }
 
+    var isAutoLandscapeEnabled: Boolean
+        get() = prefs.getBoolean(KEY_AUTO_LANDSCAPE_ENABLE, true)
+        set(value) {
+            prefs.edit().putBoolean(KEY_AUTO_LANDSCAPE_ENABLE, value).apply()
+            saveBackupToFile()
+        }
+
+    var isAutoLockOnGameLaunch: Boolean
+        get() = prefs.getBoolean(KEY_AUTO_LOCK_ON_GAME_LAUNCH, true)
+        set(value) {
+            prefs.edit().putBoolean(KEY_AUTO_LOCK_ON_GAME_LAUNCH, value).apply()
+            saveBackupToFile()
+        }
+
     var selectedPackages: Set<String>
         get() {
             val saved = prefs.getStringSet(KEY_SELECTED_APPS, null)
-            return if (saved == null) {
+            return if (saved.isNullOrEmpty()) {
                 DEFAULT_TARGET_PACKAGES
             } else {
                 HashSet(saved)
@@ -88,7 +102,7 @@ class PrefManager(private val context: Context) {
         }
 
     var currentMode: Int
-        get() = prefs.getInt(KEY_CURRENT_MODE, MODE_EDIT)
+        get() = prefs.getInt(KEY_CURRENT_MODE, MODE_LOCK)
         set(value) {
             prefs.edit().putInt(KEY_CURRENT_MODE, value).apply()
             saveBackupToFile()
@@ -126,13 +140,6 @@ class PrefManager(private val context: Context) {
         get() = prefs.getBoolean(KEY_SHOW_OVERLAY_IN_APP, true)
         set(value) {
             prefs.edit().putBoolean(KEY_SHOW_OVERLAY_IN_APP, value).apply()
-            saveBackupToFile()
-        }
-
-    var showRadarPreview: Boolean
-        get() = prefs.getBoolean(KEY_SHOW_RADAR_PREVIEW, true)
-        set(value) {
-            prefs.edit().putBoolean(KEY_SHOW_RADAR_PREVIEW, value).apply()
             saveBackupToFile()
         }
 
@@ -190,25 +197,39 @@ class PrefManager(private val context: Context) {
                 defaultH = 600
             }
             2 -> {
-                title = "Z2: Top Bar & Call Guard"
+                title = "Z2: Top Status & Call Bar"
                 defaultX = 220
                 defaultY = 0
                 defaultW = 1650
                 defaultH = 85
             }
             3 -> {
-                title = "Z3: Below 3rd-Finger"
+                title = "Z3: Below 3rd-Finger Claw"
                 defaultX = 220
                 defaultY = 270
                 defaultW = 420
                 defaultH = 330
             }
-            else -> {
+            4 -> {
                 title = "Z4: Right of 3rd-Finger"
-                defaultX = 460
+                defaultX = 640
                 defaultY = 85
                 defaultW = 380
-                defaultH = 515
+                defaultH = 420
+            }
+            5 -> {
+                title = "Z5: Above Joystick Guard"
+                defaultX = 120
+                defaultY = 600
+                defaultW = 350
+                defaultH = 180
+            }
+            else -> {
+                title = "Z6: Right Edge / Fire Guard"
+                defaultX = 2200
+                defaultY = 0
+                defaultW = 200
+                defaultH = 600
             }
         }
 
@@ -218,8 +239,8 @@ class PrefManager(private val context: Context) {
             enabled = isZoneEnabled(zoneId),
             x = prefs.getInt("zone_${zoneId}_x", defaultX).coerceAtLeast(0),
             y = prefs.getInt("zone_${zoneId}_y", defaultY).coerceAtLeast(0),
-            width = prefs.getInt("zone_${zoneId}_w", defaultW).coerceAtLeast(40),
-            height = prefs.getInt("zone_${zoneId}_h", defaultH).coerceAtLeast(35)
+            width = prefs.getInt("zone_${zoneId}_w", defaultW).coerceAtLeast(30),
+            height = prefs.getInt("zone_${zoneId}_h", defaultH).coerceAtLeast(30)
         )
     }
 
@@ -227,8 +248,8 @@ class PrefManager(private val context: Context) {
         prefs.edit()
             .putInt("zone_${zoneId}_x", x.coerceAtLeast(0))
             .putInt("zone_${zoneId}_y", y.coerceAtLeast(0))
-            .putInt("zone_${zoneId}_w", width.coerceAtLeast(40))
-            .putInt("zone_${zoneId}_h", height.coerceAtLeast(35))
+            .putInt("zone_${zoneId}_w", width.coerceAtLeast(30))
+            .putInt("zone_${zoneId}_h", height.coerceAtLeast(30))
             .apply()
         saveBackupToFile()
     }
@@ -248,14 +269,10 @@ class PrefManager(private val context: Context) {
         editor.putBoolean(KEY_PILL_HIDDEN_MANUALLY, false)
         editor.putBoolean(KEY_HIDE_TOGGLE_ALWAYS, false)
         editor.putBoolean(KEY_SHOW_OVERLAY_IN_APP, true)
+        editor.putInt(KEY_CURRENT_MODE, MODE_LOCK)
         editor.apply()
         saveBackupToFile()
     }
-
-    // ==========================================
-    // PERSISTENT DATA BACKUP & RESTORE SYSTEM
-    // Ensures zone coordinates are NEVER lost on update!
-    // ==========================================
 
     private fun getBackupFiles(): List<File> {
         val files = mutableListOf<File>()
@@ -277,6 +294,9 @@ class PrefManager(private val context: Context) {
                 val json = JSONObject()
                 json.put("master_enabled", isMasterEnabled)
                 json.put("app_filter_enabled", isAppFilterEnabled)
+                json.put("auto_landscape_enable", isAutoLandscapeEnabled)
+                json.put("auto_lock_on_game_launch", isAutoLockOnGameLaunch)
+                json.put("current_mode", currentMode)
                 json.put("edit_opacity", editOpacityPercent)
                 json.put("lock_border", showLockBorder)
                 json.put("hide_toggle_always", hideFloatingToggleAlways)
@@ -321,24 +341,15 @@ class PrefManager(private val context: Context) {
                     val json = JSONObject(content)
                     val editor = prefs.edit()
 
-                    if (json.has("master_enabled")) {
-                        editor.putBoolean(KEY_MASTER_ENABLED, json.getBoolean("master_enabled"))
-                    }
-                    if (json.has("app_filter_enabled")) {
-                        editor.putBoolean(KEY_APP_FILTER_ENABLED, json.getBoolean("app_filter_enabled"))
-                    }
-                    if (json.has("edit_opacity")) {
-                        editor.putInt(KEY_EDIT_OPACITY, json.getInt("edit_opacity"))
-                    }
-                    if (json.has("hide_toggle_always")) {
-                        editor.putBoolean(KEY_HIDE_TOGGLE_ALWAYS, json.getBoolean("hide_toggle_always"))
-                    }
-                    if (json.has("pill_x")) {
-                        editor.putInt(KEY_PILL_X, json.getInt("pill_x"))
-                    }
-                    if (json.has("pill_y")) {
-                        editor.putInt(KEY_PILL_Y, json.getInt("pill_y"))
-                    }
+                    if (json.has("master_enabled")) editor.putBoolean(KEY_MASTER_ENABLED, json.getBoolean("master_enabled"))
+                    if (json.has("app_filter_enabled")) editor.putBoolean(KEY_APP_FILTER_ENABLED, json.getBoolean("app_filter_enabled"))
+                    if (json.has("auto_landscape_enable")) editor.putBoolean(KEY_AUTO_LANDSCAPE_ENABLE, json.getBoolean("auto_landscape_enable"))
+                    if (json.has("auto_lock_on_game_launch")) editor.putBoolean(KEY_AUTO_LOCK_ON_GAME_LAUNCH, json.getBoolean("auto_lock_on_game_launch"))
+                    if (json.has("current_mode")) editor.putInt(KEY_CURRENT_MODE, json.getInt("current_mode"))
+                    if (json.has("edit_opacity")) editor.putInt(KEY_EDIT_OPACITY, json.getInt("edit_opacity"))
+                    if (json.has("hide_toggle_always")) editor.putBoolean(KEY_HIDE_TOGGLE_ALWAYS, json.getBoolean("hide_toggle_always"))
+                    if (json.has("pill_x")) editor.putInt(KEY_PILL_X, json.getInt("pill_x"))
+                    if (json.has("pill_y")) editor.putInt(KEY_PILL_Y, json.getInt("pill_y"))
 
                     if (json.has("zones")) {
                         val zonesArray = json.getJSONArray("zones")

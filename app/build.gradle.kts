@@ -1,4 +1,4 @@
-plugins {
+﻿plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
 }
@@ -11,8 +11,8 @@ android {
         applicationId = "com.wolver.touchguard.pro"
         minSdk = 26
         targetSdk = 35
-        versionCode = 5
-        versionName = "3.0.0"
+        versionCode = 6
+        versionName = "4.0.0"
     }
 
     buildFeatures {
@@ -25,6 +25,8 @@ android {
             storePassword = "wolver123"
             keyAlias = "wolver"
             keyPassword = "wolver123"
+            enableV1Signing = true
+            enableV2Signing = true
         }
     }
 
@@ -38,7 +40,7 @@ android {
             )
         }
         debug {
-            isDebuggable = true
+            isDebuggable = false
             signingConfig = signingConfigs.getByName("release")
         }
     }

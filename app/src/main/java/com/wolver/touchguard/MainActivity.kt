@@ -1,4 +1,4 @@
-package com.wolver.touchguard
+﻿package com.wolver.touchguard
 
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.app.AlertDialog
@@ -31,18 +31,23 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnOpenAppInfo: Button
     private lateinit var btnOpenAccessibility: Button
     private lateinit var switchMasterEnable: SwitchCompat
+    private lateinit var switchAutoLockOnGame: SwitchCompat
+    private lateinit var switchAutoLandscape: SwitchCompat
     private lateinit var switchAppFilter: SwitchCompat
     private lateinit var tvSelectedAppsSummary: TextView
     private lateinit var btnSelectApps: Button
 
     private lateinit var switchViewBarsOnScreen: SwitchCompat
     private lateinit var switchShowFloatingToggle: SwitchCompat
+    private lateinit var btnOpenInGameMenuNow: Button
     private lateinit var radarScreenPreview: ScreenRadarView
 
     private lateinit var switchZone1: SwitchCompat
     private lateinit var switchZone2: SwitchCompat
     private lateinit var switchZone3: SwitchCompat
     private lateinit var switchZone4: SwitchCompat
+    private lateinit var switchZone5: SwitchCompat
+    private lateinit var switchZone6: SwitchCompat
 
     private lateinit var switchHidePillInLock: SwitchCompat
     private lateinit var switchLockBorder: SwitchCompat
@@ -53,6 +58,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnSelectZ2: Button
     private lateinit var btnSelectZ3: Button
     private lateinit var btnSelectZ4: Button
+    private lateinit var btnSelectZ5: Button
+    private lateinit var btnSelectZ6: Button
     private lateinit var tvEditingZoneTitle: TextView
     private lateinit var tvZoneX: TextView
     private lateinit var seekZoneX: SeekBar
@@ -78,7 +85,6 @@ class MainActivity : AppCompatActivity() {
         bindViews()
         setupListeners()
 
-        // Background update check on startup
         checkAppUpdates(showToastIfLatest = false)
     }
 
@@ -98,12 +104,15 @@ class MainActivity : AppCompatActivity() {
         btnOpenAppInfo = findViewById(R.id.btnOpenAppInfo)
         btnOpenAccessibility = findViewById(R.id.btnOpenAccessibility)
         switchMasterEnable = findViewById(R.id.switchMasterEnable)
+        switchAutoLockOnGame = findViewById(R.id.switchAutoLockOnGame)
+        switchAutoLandscape = findViewById(R.id.switchAutoLandscape)
         switchAppFilter = findViewById(R.id.switchAppFilter)
         tvSelectedAppsSummary = findViewById(R.id.tvSelectedAppsSummary)
         btnSelectApps = findViewById(R.id.btnSelectApps)
 
         switchViewBarsOnScreen = findViewById(R.id.switchViewBarsOnScreen)
         switchShowFloatingToggle = findViewById(R.id.switchShowFloatingToggle)
+        btnOpenInGameMenuNow = findViewById(R.id.btnOpenInGameMenuNow)
         radarScreenPreview = findViewById(R.id.radarScreenPreview)
         radarScreenPreview.prefManager = prefManager
 
@@ -111,6 +120,8 @@ class MainActivity : AppCompatActivity() {
         switchZone2 = findViewById(R.id.switchZone2)
         switchZone3 = findViewById(R.id.switchZone3)
         switchZone4 = findViewById(R.id.switchZone4)
+        switchZone5 = findViewById(R.id.switchZone5)
+        switchZone6 = findViewById(R.id.switchZone6)
 
         switchHidePillInLock = findViewById(R.id.switchHidePillInLock)
         switchLockBorder = findViewById(R.id.switchLockBorder)
@@ -121,6 +132,8 @@ class MainActivity : AppCompatActivity() {
         btnSelectZ2 = findViewById(R.id.btnSelectZ2)
         btnSelectZ3 = findViewById(R.id.btnSelectZ3)
         btnSelectZ4 = findViewById(R.id.btnSelectZ4)
+        btnSelectZ5 = findViewById(R.id.btnSelectZ5)
+        btnSelectZ6 = findViewById(R.id.btnSelectZ6)
         tvEditingZoneTitle = findViewById(R.id.tvEditingZoneTitle)
         tvZoneX = findViewById(R.id.tvZoneX)
         seekZoneX = findViewById(R.id.seekZoneX)
@@ -148,14 +161,21 @@ class MainActivity : AppCompatActivity() {
                     Toast.makeText(this, "Could not check for updates", Toast.LENGTH_SHORT).show()
                 }
             } else if (info.hasUpdate) {
-                tvUpdateStatus.text = "🚀 New version v${info.latestVersionName} available!"
+                tvUpdateStatus.text = "🚀 New version v${info.latestVersionName} available! Tap to install."
                 tvUpdateStatus.setTextColor(Color.parseColor("#00E676"))
                 UpdateManager.showUpdateDialog(this, info)
             } else {
-                tvUpdateStatus.text = "● You are running the latest version (v${BuildConfig.VERSION_NAME})."
+                tvUpdateStatus.text = "● Running latest version (v${BuildConfig.VERSION_NAME})."
                 tvUpdateStatus.setTextColor(Color.parseColor("#00E676"))
                 if (showToastIfLatest) {
-                    Toast.makeText(this, "You're already on the latest version!", Toast.LENGTH_SHORT).show()
+                    AlertDialog.Builder(this)
+                        .setTitle("Up to Date (v${BuildConfig.VERSION_NAME})")
+                        .setMessage("You are already on the latest version.\n\nWould you like to force re-download and install the latest APK from GitHub anyway?")
+                        .setPositiveButton("Force Download & Install") { _, _ ->
+                            UpdateManager.startDirectInAppDownload(this, info)
+                        }
+                        .setNegativeButton("Close", null)
+                        .show()
                 }
             }
         }
@@ -163,23 +183,27 @@ class MainActivity : AppCompatActivity() {
 
     private fun syncUiWithPrefs() {
         switchMasterEnable.isChecked = prefManager.isMasterEnabled
+        switchAutoLockOnGame.isChecked = prefManager.isAutoLockOnGameLaunch
+        switchAutoLandscape.isChecked = prefManager.isAutoLandscapeEnabled
         switchAppFilter.isChecked = prefManager.isAppFilterEnabled
         updateSelectedAppsSummaryText()
 
         switchViewBarsOnScreen.isChecked = prefManager.showOverlayInApp
-        switchShowFloatingToggle.isChecked = !prefManager.hideFloatingToggleAlways
+        switchShowFloatingToggle.isChecked = !(prefManager.hideFloatingToggleAlways || prefManager.isPillHiddenManually)
 
         switchZone1.isChecked = prefManager.isZoneEnabled(1)
         switchZone2.isChecked = prefManager.isZoneEnabled(2)
         switchZone3.isChecked = prefManager.isZoneEnabled(3)
         switchZone4.isChecked = prefManager.isZoneEnabled(4)
+        switchZone5.isChecked = prefManager.isZoneEnabled(5)
+        switchZone6.isChecked = prefManager.isZoneEnabled(6)
 
         switchHidePillInLock.isChecked = prefManager.hidePillInLockMode
         switchLockBorder.isChecked = prefManager.showLockBorder
 
         val opacity = prefManager.editOpacityPercent
         seekBarEditOpacity.progress = opacity
-        tvOpacityValue.text = "Bar Red Opacity: $opacity%"
+        tvOpacityValue.text = "Edit Mode Red Opacity: $opacity%"
 
         loadZoneIntoSliders(currentlySelectedZoneForSliders)
         radarScreenPreview.invalidate()
@@ -190,7 +214,7 @@ class MainActivity : AppCompatActivity() {
         radarScreenPreview.selectedZoneId = zoneId
         isUpdatingSlidersProgrammatically = true
 
-        val buttons = listOf(btnSelectZ1, btnSelectZ2, btnSelectZ3, btnSelectZ4)
+        val buttons = listOf(btnSelectZ1, btnSelectZ2, btnSelectZ3, btnSelectZ4, btnSelectZ5, btnSelectZ6)
         buttons.forEachIndexed { index, button ->
             val color = if (index + 1 == zoneId) "#FF1744" else "#1E1E1E"
             button.backgroundTintList = ColorStateList.valueOf(Color.parseColor(color))
@@ -205,10 +229,10 @@ class MainActivity : AppCompatActivity() {
         seekZoneY.progress = cfg.y.coerceIn(0, seekZoneY.max)
         tvZoneY.text = "Vertical Position (Y): ${cfg.y} px"
 
-        seekZoneW.progress = cfg.width.coerceIn(40, seekZoneW.max)
+        seekZoneW.progress = cfg.width.coerceIn(30, seekZoneW.max)
         tvZoneW.text = "Zone Width: ${cfg.width} px"
 
-        seekZoneH.progress = cfg.height.coerceIn(35, seekZoneH.max)
+        seekZoneH.progress = cfg.height.coerceIn(30, seekZoneH.max)
         tvZoneH.text = "Zone Height: ${cfg.height} px"
 
         isUpdatingSlidersProgrammatically = false
@@ -220,8 +244,8 @@ class MainActivity : AppCompatActivity() {
         val id = currentlySelectedZoneForSliders
         val newX = seekZoneX.progress
         val newY = seekZoneY.progress
-        val newW = seekZoneW.progress.coerceAtLeast(40)
-        val newH = seekZoneH.progress.coerceAtLeast(35)
+        val newW = seekZoneW.progress.coerceAtLeast(30)
+        val newH = seekZoneH.progress.coerceAtLeast(30)
 
         tvZoneX.text = "Horizontal Position (X): $newX px"
         tvZoneY.text = "Vertical Position (Y): $newY px"
@@ -263,6 +287,16 @@ class MainActivity : AppCompatActivity() {
             radarScreenPreview.invalidate()
         }
 
+        switchAutoLockOnGame.setOnCheckedChangeListener { _, isChecked ->
+            prefManager.isAutoLockOnGameLaunch = isChecked
+            notifyServiceToRefresh()
+        }
+
+        switchAutoLandscape.setOnCheckedChangeListener { _, isChecked ->
+            prefManager.isAutoLandscapeEnabled = isChecked
+            notifyServiceToRefresh()
+        }
+
         switchAppFilter.setOnCheckedChangeListener { _, isChecked ->
             prefManager.isAppFilterEnabled = isChecked
             notifyServiceToRefresh()
@@ -278,15 +312,27 @@ class MainActivity : AppCompatActivity() {
                 prefManager.currentMode = PrefManager.MODE_EDIT
             }
             notifyServiceToRefresh()
-            val msg = if (isChecked) "Blockage bars VISIBLE on screen" else "Blockage bars HIDDEN from screen"
-            Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
         }
 
         switchShowFloatingToggle.setOnCheckedChangeListener { _, isChecked ->
             prefManager.hideFloatingToggleAlways = !isChecked
+            prefManager.isPillHiddenManually = !isChecked
             notifyServiceToRefresh()
-            val msg = if (isChecked) "Floating toggle visible on screen" else "Floating toggle completely hidden"
+            val msg = if (isChecked) {
+                "Floating toggle bar VISIBLE"
+            } else {
+                "Floating toggle HIDDEN (Touch blockage stays ACTIVE!)"
+            }
             Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+        }
+
+        btnOpenInGameMenuNow.setOnClickListener {
+            val svc = TouchGuardAccessibilityService.instance
+            if (svc == null) {
+                Toast.makeText(this, "Enable Accessibility Service first!", Toast.LENGTH_SHORT).show()
+            } else {
+                svc.showFloatingMenuFromApp()
+            }
         }
 
         radarScreenPreview.onZoneSelected = { zoneId ->
@@ -298,21 +344,28 @@ class MainActivity : AppCompatActivity() {
             radarScreenPreview.invalidate()
             notifyServiceToRefresh()
         }
-
         switchZone2.setOnCheckedChangeListener { _, isChecked ->
             prefManager.setZoneEnabled(2, isChecked)
             radarScreenPreview.invalidate()
             notifyServiceToRefresh()
         }
-
         switchZone3.setOnCheckedChangeListener { _, isChecked ->
             prefManager.setZoneEnabled(3, isChecked)
             radarScreenPreview.invalidate()
             notifyServiceToRefresh()
         }
-
         switchZone4.setOnCheckedChangeListener { _, isChecked ->
             prefManager.setZoneEnabled(4, isChecked)
+            radarScreenPreview.invalidate()
+            notifyServiceToRefresh()
+        }
+        switchZone5.setOnCheckedChangeListener { _, isChecked ->
+            prefManager.setZoneEnabled(5, isChecked)
+            radarScreenPreview.invalidate()
+            notifyServiceToRefresh()
+        }
+        switchZone6.setOnCheckedChangeListener { _, isChecked ->
+            prefManager.setZoneEnabled(6, isChecked)
             radarScreenPreview.invalidate()
             notifyServiceToRefresh()
         }
@@ -330,13 +383,12 @@ class MainActivity : AppCompatActivity() {
         seekBarEditOpacity.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 val clamped = progress.coerceIn(15, 95)
-                tvOpacityValue.text = "Bar Red Opacity: $clamped%"
+                tvOpacityValue.text = "Edit Mode Red Opacity: $clamped%"
                 if (fromUser) {
                     prefManager.editOpacityPercent = clamped
                     notifyServiceToRefresh()
                 }
             }
-
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
         })
@@ -345,6 +397,8 @@ class MainActivity : AppCompatActivity() {
         btnSelectZ2.setOnClickListener { loadZoneIntoSliders(2) }
         btnSelectZ3.setOnClickListener { loadZoneIntoSliders(3) }
         btnSelectZ4.setOnClickListener { loadZoneIntoSliders(4) }
+        btnSelectZ5.setOnClickListener { loadZoneIntoSliders(5) }
+        btnSelectZ6.setOnClickListener { loadZoneIntoSliders(6) }
 
         val sliderListener = object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
@@ -352,7 +406,6 @@ class MainActivity : AppCompatActivity() {
                     saveCurrentSliderValuesToZone()
                 }
             }
-
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
         }
@@ -363,27 +416,34 @@ class MainActivity : AppCompatActivity() {
         seekZoneH.setOnSeekBarChangeListener(sliderListener)
 
         btnForceEditMode.setOnClickListener {
+            prefManager.isMasterEnabled = true
             prefManager.isPillHiddenManually = false
+            prefManager.hideFloatingToggleAlways = false
             prefManager.showOverlayInApp = true
             prefManager.currentMode = PrefManager.MODE_EDIT
-            switchViewBarsOnScreen.isChecked = true
+            syncUiWithPrefs()
             notifyServiceToRefresh()
-            Toast.makeText(this, "Bars are now VISIBLE on screen for adjustment", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "✏️ Edit Mode Active: Drag red bars to adjust.", Toast.LENGTH_SHORT).show()
         }
 
         btnForceLockMode.setOnClickListener {
+            prefManager.isMasterEnabled = true
             prefManager.currentMode = PrefManager.MODE_LOCK
             prefManager.showOverlayInApp = false
-            switchViewBarsOnScreen.isChecked = false
+            syncUiWithPrefs()
             notifyServiceToRefresh()
-            Toast.makeText(this, "Bars HIDDEN. Active touch blocking enabled.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                this,
+                "🔒 Locked In! Touch blocking is ACTIVE inside Free Fire & Landscape.",
+                Toast.LENGTH_LONG
+            ).show()
         }
 
         btnResetZones.setOnClickListener {
             prefManager.resetZonesToDefaults()
             syncUiWithPrefs()
             notifyServiceToRefresh()
-            Toast.makeText(this, "All zones restored to defaults", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "All 6 zones restored to defaults", Toast.LENGTH_SHORT).show()
         }
     }
 
