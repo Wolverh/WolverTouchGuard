@@ -8,4 +8,4 @@
     android:canRetrieveWindowContent="false"
     android:description="@string/accessibility_service_description"
     android:notificationTimeout="50"
-    android:settingsActivity="com.wolver.touchguard.MainActivity" />
+    android:settingsActivity=".MainActivity" />

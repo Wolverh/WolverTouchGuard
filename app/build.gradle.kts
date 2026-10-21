@@ -8,20 +8,30 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.wolver.touchguard.v2"
+        applicationId = "com.wolver.touchguard.pro"
         minSdk = 26
         targetSdk = 35
-        versionCode = 4
-        versionName = "2.1.0"
+        versionCode = 5
+        versionName = "3.0.0"
     }
 
     buildFeatures {
         buildConfig = true
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("release.p12")
+            storePassword = "wolver123"
+            keyAlias = "wolver"
+            keyPassword = "wolver123"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -29,6 +39,7 @@ android {
         }
         debug {
             isDebuggable = true
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 

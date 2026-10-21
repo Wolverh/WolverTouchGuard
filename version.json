@@ -1,6 +1,6 @@
 {
-  "versionCode": 4,
-  "versionName": "2.1.0",
+  "versionCode": 5,
+  "versionName": "3.0.0",
   "downloadUrl": "https://github.com/Wolverh/WolverTouchGuard/releases/download/latest/app-debug.apk",
-  "changelog": "v2.1.0: Tap the floating toggle to open Quick Menu with [🚫 HIDE THIS TOGGLE] button, persistent data backup (never lose your zone sizes on update), and fixed touch handling."
+  "changelog": "v3.0.0 Permanent Fixed Keystore: Solved package conflict error permanently with permanent signing key and fresh package com.wolver.touchguard.pro. Future updates update in-place without conflicts."
 }
