@@ -29,7 +29,7 @@
 
             <TextView android:id="@+id/tvServiceStatus" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:layout_width="match_parent" android:text="Checking status..." android:textColor="@color/accent_red" android:textSize="16sp" android:textStyle="bold"/>
 
-            <TextView android:layout_height="wrap_content" android:layout_marginTop="6dp" android:layout_width="match_parent" android:text="First open App Info -"> 3 dots -> Allow restricted settings, and set Battery to Unrestricted."
+            <TextView android:layout_height="wrap_content" android:layout_marginTop="6dp" android:layout_width="match_parent" android:text="First open App Info -&gt; 3 dots -&gt; Allow restricted settings, and set Battery to Unrestricted."
                 android:textColor="@color/text_secondary"
                 android:textSize="12sp" />
 
