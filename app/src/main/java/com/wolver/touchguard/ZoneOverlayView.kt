@@ -1,4 +1,4 @@
-﻿package com.wolver.touchguard
+package com.wolver.touchguard
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -75,6 +75,12 @@ class ZoneOverlayView(
     private var initialW = 0
     private var initialH = 0
 
+    init {
+        setWillNotDraw(false)
+        isClickable = true
+        isFocusable = false
+    }
+
     fun updateState(
         x: Int,
         y: Int,
@@ -129,14 +135,14 @@ class ZoneOverlayView(
 
             PrefManager.MODE_LOCK -> {
                 if (showLockBorder) {
-                    fillPaint.color = Color.argb(18, 0, 230, 118)
+                    fillPaint.color = Color.argb(22, 0, 230, 118)
                     canvas.drawRect(0f, 0f, w, h, fillPaint)
-                    borderPaint.color = Color.parseColor("#5500E676")
-                    borderPaint.strokeWidth = 1.5f * density
+                    borderPaint.color = Color.parseColor("#7700E676")
+                    borderPaint.strokeWidth = 2f * density
                     canvas.drawRect(1f, 1f, w - 1f, h - 1f, borderPaint)
                 } else {
-                    // Draw a 1/255 alpha pixel so Android hardware compositor NEVER optimizes away hit-testing
-                    fillPaint.color = Color.argb(1, 0, 0, 0)
+                    // Draw a 2/255 alpha pixel so Android hardware compositor NEVER optimizes away hit-testing
+                    fillPaint.color = Color.argb(2, 0, 0, 0)
                     canvas.drawRect(0f, 0f, w, h, fillPaint)
                 }
             }

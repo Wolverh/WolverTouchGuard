@@ -1,4 +1,4 @@
-﻿plugins {
+plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
 }
@@ -11,8 +11,8 @@ android {
         applicationId = "com.wolver.touchguard.pro"
         minSdk = 26
         targetSdk = 35
-        versionCode = 6
-        versionName = "4.0.0"
+        versionCode = 7
+        versionName = "4.1.0"
     }
 
     buildFeatures {

@@ -1,6 +1,6 @@
-﻿{
-  "versionCode": 6,
-  "versionName": "4.0.0",
+{
+  "versionCode": 7,
+  "versionName": "4.1.0",
   "downloadUrl": "https://github.com/Wolverh/WolverTouchGuard/releases/download/latest/app-debug.apk",
-  "changelog": "v4.0.0 Major Overhaul:\n• Fixed Direct In-App APK Downloader & Installer (no browser redirect, zero package conflict).\n• Fixed Lock Mode touch blockage staying 100% active when toggle is hidden.\n• Added Instant Free Fire & Landscape Auto-Activation.\n• Added 6 Independent Zones with full In-Game Control Menu to toggle/exclude individual blocks and fine-tune dimensions directly inside the game."
+  "changelog": "v4.1.0 Critical Bug Fixes:\n• Fixed Lock Mode inconsistently blocking touches (stale FLAG_NOT_TOUCHABLE bits never cleared).\n• Fixed hiding toggle deactivating blockage zones (pill visibility now 100% decoupled from zone blocking).\n• Fixed zones not activating on service start when foreground package unknown.\n• Rebuilt window flags from scratch every refresh cycle to prevent stale state accumulation."
 }

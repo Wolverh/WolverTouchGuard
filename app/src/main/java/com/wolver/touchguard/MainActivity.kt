@@ -1,4 +1,4 @@
-﻿package com.wolver.touchguard
+package com.wolver.touchguard
 
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.app.AlertDialog
@@ -9,6 +9,7 @@ import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.accessibility.AccessibilityManager
@@ -20,6 +21,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
 
 class MainActivity : AppCompatActivity() {
+
+    companion object {
+        @Volatile
+        var isActivityInForeground: Boolean = false
+            private set
+    }
 
     private lateinit var prefManager: PrefManager
 
@@ -81,6 +88,17 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        // 144Hz high refresh rate screen support
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            try {
+                val maxRefresh = display?.supportedModes?.maxOfOrNull { it.refreshRate } ?: 144f
+                if (maxRefresh > 60f) {
+                    window.attributes.preferredRefreshRate = maxRefresh
+                }
+            } catch (_: Exception) {
+            }
+        }
+
         prefManager = PrefManager(this)
         bindViews()
         setupListeners()
@@ -90,8 +108,16 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        isActivityInForeground = true
         syncUiWithPrefs()
         updateServiceStatusBanner()
+        notifyServiceToRefresh()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        isActivityInForeground = false
+        notifyServiceToRefresh()
     }
 
     private fun bindViews() {
@@ -308,9 +334,6 @@ class MainActivity : AppCompatActivity() {
 
         switchViewBarsOnScreen.setOnCheckedChangeListener { _, isChecked ->
             prefManager.showOverlayInApp = isChecked
-            if (isChecked) {
-                prefManager.currentMode = PrefManager.MODE_EDIT
-            }
             notifyServiceToRefresh()
         }
 
@@ -321,7 +344,7 @@ class MainActivity : AppCompatActivity() {
             val msg = if (isChecked) {
                 "Floating toggle bar VISIBLE"
             } else {
-                "Floating toggle HIDDEN (Touch blockage stays ACTIVE!)"
+                "Floating toggle HIDDEN (Touch blockage stays 100% ACTIVE!)"
             }
             Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
         }
@@ -429,12 +452,11 @@ class MainActivity : AppCompatActivity() {
         btnForceLockMode.setOnClickListener {
             prefManager.isMasterEnabled = true
             prefManager.currentMode = PrefManager.MODE_LOCK
-            prefManager.showOverlayInApp = false
             syncUiWithPrefs()
             notifyServiceToRefresh()
             Toast.makeText(
                 this,
-                "🔒 Locked In! Touch blocking is ACTIVE inside Free Fire & Landscape.",
+                "🔒 Locked In! Touch blocking is ACTIVE.",
                 Toast.LENGTH_LONG
             ).show()
         }

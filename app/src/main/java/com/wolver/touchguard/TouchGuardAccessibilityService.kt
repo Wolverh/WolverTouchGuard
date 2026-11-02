@@ -1,4 +1,4 @@
-﻿package com.wolver.touchguard
+package com.wolver.touchguard
 
 import android.accessibilityservice.AccessibilityService
 import android.content.Intent
@@ -75,7 +75,7 @@ class TouchGuardAccessibilityService : AccessibilityService() {
             val isTargetGameNow = targetGames.contains(detectedPkg)
             val wasTargetGameBefore = targetGames.contains(previousPkg)
 
-            // Instant Free Fire / Game Launch Auto-Activation!
+            // Instant Free Fire / Game Launch Auto-Activation
             if (isTargetGameNow && !wasTargetGameBefore) {
                 lastDetectedGamePackage = detectedPkg
                 if (prefManager.isAutoLockOnGameLaunch) {
@@ -156,7 +156,7 @@ class TouchGuardAccessibilityService : AccessibilityService() {
             volUpPressed = false
             volDownPressed = false
 
-            // Vol Up + Vol Down always restores the floating toggle if hidden!
+            // Vol Up + Vol Down restores floating toggle if hidden
             if (prefManager.hideFloatingToggleAlways || prefManager.isPillHiddenManually) {
                 prefManager.hideFloatingToggleAlways = false
                 prefManager.isPillHiddenManually = false
@@ -179,7 +179,6 @@ class TouchGuardAccessibilityService : AccessibilityService() {
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        // When rotating to Landscape (e.g., launching Free Fire), refresh immediately
         if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE && prefManager.isAutoLandscapeEnabled) {
             if (prefManager.currentMode == PrefManager.MODE_OFF) {
                 prefManager.currentMode = PrefManager.MODE_LOCK
@@ -204,14 +203,13 @@ class TouchGuardAccessibilityService : AccessibilityService() {
                 refreshOverlaysVisibilityAndState()
             },
             onHideToggleOnlyClicked = {
-                // Hide ONLY the toggle pill; keep blockage zones 100% ACTIVE!
                 prefManager.isPillHiddenManually = true
                 prefManager.hideFloatingToggleAlways = true
                 prefManager.currentMode = PrefManager.MODE_LOCK
                 refreshOverlaysVisibilityAndState()
                 Toast.makeText(
                     this,
-                    "🚫 Toggle Hidden! Touch Blocking is 100% ACTIVE. (Press Vol Up + Vol Down to unhide)",
+                    "🚫 Toggle Hidden! Touch Blocking is 100% ACTIVE. (Vol Up + Vol Down to unhide)",
                     Toast.LENGTH_LONG
                 ).show()
             },
@@ -235,9 +233,12 @@ class TouchGuardAccessibilityService : AccessibilityService() {
             WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                     WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
-                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+                    WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
             PixelFormat.TRANSLUCENT
         )
+
+        applyDisplayRefreshRate(params)
 
         menuView = menu
         try {
@@ -255,6 +256,28 @@ class TouchGuardAccessibilityService : AccessibilityService() {
             }
         }
         menuView = null
+    }
+
+    private fun applyDisplayRefreshRate(params: WindowManager.LayoutParams) {
+        try {
+            val disp = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                display
+            } else {
+                @Suppress("DEPRECATION")
+                windowManager.defaultDisplay
+            }
+            val maxRate = disp?.supportedModes?.maxOfOrNull { it.refreshRate } ?: 144f
+            if (maxRate > 60f) {
+                params.preferredRefreshRate = maxRate
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    val bestMode = disp?.supportedModes?.maxByOrNull { it.refreshRate }
+                    if (bestMode != null) {
+                        params.preferredDisplayModeId = bestMode.modeId
+                    }
+                }
+            }
+        } catch (_: Exception) {
+        }
     }
 
     private fun createOverlayViews() {
@@ -337,7 +360,6 @@ class TouchGuardAccessibilityService : AccessibilityService() {
                 refreshOverlaysVisibilityAndState()
             },
             onHideCompletelyClicked = {
-                // Clicking ✕ on the pill hides ONLY the pill and locks touch blocking ON!
                 prefManager.hideFloatingToggleAlways = true
                 prefManager.isPillHiddenManually = true
                 prefManager.currentMode = PrefManager.MODE_LOCK
@@ -392,7 +414,9 @@ class TouchGuardAccessibilityService : AccessibilityService() {
         var flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                 WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
-                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
+                WindowManager.LayoutParams.FLAG_SPLIT_TOUCH or
+                WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED
 
         if (!touchable) {
             flags = flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
@@ -409,6 +433,8 @@ class TouchGuardAccessibilityService : AccessibilityService() {
         params.gravity = Gravity.TOP or Gravity.START
         params.x = x
         params.y = y
+
+        applyDisplayRefreshRate(params)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             params.layoutInDisplayCutoutMode =
@@ -438,35 +464,46 @@ class TouchGuardAccessibilityService : AccessibilityService() {
         val mode = prefManager.currentMode
 
         val isLandscape = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-        val isSelfApp = (currentForegroundPackage == packageName)
+        // Use reliable static activity state instead of fragile accessibility package events
+        val isSelfApp = MainActivity.isActivityInForeground
 
-        // Determine if overlays should be active right now:
-        // 1. Inside our own config app: show if user enabled "View Blockage Bars" OR if in Edit mode.
-        // 2. Outside our config app:
-        //    - If App Filter is OFF -> Always active!
-        //    - If App Filter is ON -> Active if current package is in allowedPackages OR if device is in Landscape mode and Auto-Landscape is enabled!
-        val shouldActivateZones = if (!masterOn) {
+        // Touch blocking should be active when:
+        // 1. Inside MainActivity: only if user specifically chose "View Blockage Bars" or is in Edit mode
+        // 2. Outside MainActivity:
+        //    - If Filter is OFF: Always active
+        //    - If Filter is ON: Active if package matches, or device is Landscape, or foreground package is unknown
+        val shouldActivateZones: Boolean = if (!masterOn || mode == PrefManager.MODE_OFF) {
             false
         } else if (isSelfApp) {
             prefManager.showOverlayInApp || (mode == PrefManager.MODE_EDIT)
-        } else if (!filterOn) {
-            true
         } else {
-            val pkgMatch = currentForegroundPackage.isNotEmpty() && allowedPackages.contains(currentForegroundPackage)
-            val landscapeGameMatch = isLandscape && prefManager.isAutoLandscapeEnabled
-            pkgMatch || landscapeGameMatch
+            if (!filterOn) {
+                true
+            } else {
+                val pkgMatch = currentForegroundPackage.isNotEmpty() && allowedPackages.contains(currentForegroundPackage)
+                val landscapeGameMatch = isLandscape && prefManager.isAutoLandscapeEnabled
+                val unknownForeground = currentForegroundPackage.isEmpty()
+                pkgMatch || landscapeGameMatch || unknownForeground
+            }
         }
 
         val opacity = prefManager.editOpacityPercent
         val lockBorder = prefManager.showLockBorder
+
+        // Clean base flags with FLAG_SPLIT_TOUCH and FLAG_HARDWARE_ACCELERATED for 144Hz multi-touch
+        val baseFlags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
+                WindowManager.LayoutParams.FLAG_SPLIT_TOUCH or
+                WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED
 
         for (zoneId in 1..PrefManager.TOTAL_ZONES) {
             val view = zoneViews[zoneId] ?: continue
             val params = zoneParams[zoneId] ?: continue
             val cfg = prefManager.getZoneConfig(zoneId)
 
-            // CRITICAL FIX: Zone blocking is strictly independent of whether the toggle pill is hidden!
-            if (!shouldActivateZones || !cfg.enabled || mode == PrefManager.MODE_OFF) {
+            if (!shouldActivateZones || !cfg.enabled) {
                 view.visibility = View.GONE
             } else {
                 view.visibility = View.VISIBLE
@@ -475,12 +512,15 @@ class TouchGuardAccessibilityService : AccessibilityService() {
                 params.width = cfg.width
                 params.height = cfg.height
 
-                // Inside MainActivity while in Lock Mode, let user click MainActivity buttons without getting blocked,
-                // EXCEPT outside MainActivity (in Free Fire / games) where zones MUST ALWAYS intercept touches!
-                if (isSelfApp && mode == PrefManager.MODE_LOCK) {
-                    params.flags = params.flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+                // Keep high refresh rate for 144Hz
+                applyDisplayRefreshRate(params)
+
+                // Inside MainActivity in LOCK mode: allow clicks to pass to MainActivity UI
+                // Outside MainActivity (games, Free Fire): SWALLOW 100% of touches
+                params.flags = if (isSelfApp && mode == PrefManager.MODE_LOCK) {
+                    baseFlags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
                 } else {
-                    params.flags = params.flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE.inv()
+                    baseFlags
                 }
 
                 view.updateState(
@@ -500,7 +540,7 @@ class TouchGuardAccessibilityService : AccessibilityService() {
             }
         }
 
-        // Floating Toggle Pill visibility (completely independent from Zone Blocking!)
+        // Floating pill toggle is 100% independent from zone blocking
         pillView?.let { pill ->
             val pParams = pillParams ?: return@let
             val shouldHidePill =
@@ -508,7 +548,7 @@ class TouchGuardAccessibilityService : AccessibilityService() {
                 prefManager.isPillHiddenManually ||
                 (mode == PrefManager.MODE_LOCK && prefManager.hidePillInLockMode)
 
-            val canShowPillInContext = masterOn && (shouldActivateZones || isSelfApp)
+            val canShowPillInContext = masterOn && (shouldActivateZones || isSelfApp || currentForegroundPackage.isEmpty())
 
             if (!canShowPillInContext || shouldHidePill) {
                 pill.visibility = View.GONE
@@ -517,6 +557,9 @@ class TouchGuardAccessibilityService : AccessibilityService() {
                 pill.visibility = View.VISIBLE
                 pParams.x = prefManager.pillX
                 pParams.y = prefManager.pillY
+                pParams.flags = baseFlags
+                applyDisplayRefreshRate(pParams)
+
                 pill.updatePillState(
                     mode = mode,
                     collapsed = prefManager.isPillCollapsed,
