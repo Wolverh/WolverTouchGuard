@@ -2,5 +2,5 @@
 <resources>
     <string name="app_name">Wolver Touch Guard</string>
     <string name="accessibility_service_label">Wolver Touch Guard Service</string>
-    <string name="accessibility_service_description">Blocks accidental palm, claw-finger, and status bar touches and applies exact custom DPI sensitivity scaling inside Free Fire without shrinking the screen.</string>
+    <string name="accessibility_service_description">Blocks accidental palm, claw-finger, and status bar touches inside selected landscape games such as Free Fire.</string>
 </resources>

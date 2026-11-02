@@ -5,6 +5,9 @@ on:
     branches: [ "main", "master" ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build-apk:
     runs-on: ubuntu-latest
@@ -19,16 +22,42 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Ensure Keystore Exists
+        run: |
+          if [ ! -f "app/release.p12" ]; then
+            keytool -genkeypair -v \
+              -keystore app/release.p12 \
+              -storetype PKCS12 \
+              -storepass wolver123 \
+              -keypass wolver123 \
+              -alias wolver \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -dname "CN=Wolver, OU=DevCode, O=Wolver, L=KafrElSheikh, S=EG, C=EG"
+          fi
+
       - name: Setup Gradle 8.9
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
 
-      - name: Compile Debug APK
-        run: gradle assembleDebug --stacktrace
+      - name: Compile Signed APK
+        run: gradle assembleDebug assembleRelease --stacktrace
 
       - name: Upload Ready-to-Install APK
         uses: actions/upload-artifact@v4
         with:
           name: WolverTouchGuard-APK
           path: app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Publish GitHub Release (Latest)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete latest --yes || true
+          git tag -d latest || true
+          git push origin :refs/tags/latest || true
+          gh release create latest app/build/outputs/apk/debug/app-debug.apk \
+            --title "Wolver Touch Guard v4.2.0 Latest" \
+            --notes "Direct in-app update ready. Exact Numerical DPI Sensitivity Engine + 6 Zones + Volume Button shortcut. Signed with permanent release key."

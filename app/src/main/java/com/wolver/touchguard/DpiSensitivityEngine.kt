@@ -98,6 +98,11 @@ object DpiSensitivityEngine {
     fun applyExactDpiSensitivity(context: Context, prefManager: PrefManager): DpiSensitivityProfile {
         val profile = computeProfile(context, prefManager)
 
+        if (!prefManager.isDpiEngineEnabled) {
+            restoreStockSensitivity(context, prefManager)
+            return profile
+        }
+
         // 1. Scale the Accessibility Service Touch Layer DisplayMetrics (xdpi/ydpi) to match the target DPI
         // while keeping configuration.smallestScreenWidthDp untouched so the screen never shrinks!
         try {

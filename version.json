@@ -1,6 +1,6 @@
 {
-  "versionCode": 7,
-  "versionName": "4.1.0",
+  "versionCode": 8,
+  "versionName": "4.2.0",
   "downloadUrl": "https://github.com/Wolverh/WolverTouchGuard/releases/download/latest/app-debug.apk",
-  "changelog": "v4.1.0 Critical Bug Fixes:\n• Fixed Lock Mode inconsistently blocking touches (stale FLAG_NOT_TOUCHABLE bits never cleared).\n• Fixed hiding toggle deactivating blockage zones (pill visibility now 100% decoupled from zone blocking).\n• Fixed zones not activating on service start when foreground package unknown.\n• Rebuilt window flags from scratch every refresh cycle to prevent stale state accumulation."
+  "changelog": "v4.2.0 Major Feature Update:\n• Exact Numerical DPI Sensitivity Engine with zero screen shrinkage.\n• Input exact Target DPI (550, 720, 960, 1200, 1440, up to 3000 DPI) and Y-Axis Headshot Drag Boost %.\n• Live Mathematical DPI multiplier telemetry and in-game sensitivity status.\n• 100% preservation of Wolver Touch Guard v4.1.0 (Volume Up+Down unhide shortcut, 6 zones, in-game control menu, 144Hz high refresh rate).\n• Permanent release signing key prevents package conflict errors."
 }
