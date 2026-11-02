@@ -489,9 +489,9 @@ class TouchGuardAccessibilityService : AccessibilityService() {
 
         // Apply or restore Exact Numerical DPI Sensitivity
         if (shouldActivateZones && prefManager.isDpiEngineEnabled) {
-            DpiSensitivityEngine.applyExactDpiSensitivity(this, prefManager)
-        } else if (!masterOn || mode == PrefManager.MODE_OFF) {
-            DpiSensitivityEngine.restoreStockSensitivity(this, prefManager)
+            DpiSensitivityEngine.activateDpi(this, prefManager)
+        } else if (!masterOn || mode == PrefManager.MODE_OFF || !prefManager.isDpiEngineEnabled) {
+            DpiSensitivityEngine.deactivateDpi(this, prefManager)
         }
 
         val opacity = prefManager.editOpacityPercent
@@ -607,7 +607,7 @@ class TouchGuardAccessibilityService : AccessibilityService() {
     }
 
     override fun onDestroy() {
-        DpiSensitivityEngine.restoreStockSensitivity(this, prefManager)
+        DpiSensitivityEngine.deactivateDpi(this, prefManager)
         removeAllOverlays()
         instance = null
         super.onDestroy()

@@ -2,6 +2,8 @@ package com.wolver.touchguard
 
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.app.AlertDialog
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
@@ -39,24 +41,28 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvServiceStatus: TextView
     private lateinit var btnOpenAppInfo: Button
     private lateinit var btnOpenAccessibility: Button
+
+    private lateinit var tvDpiStatusBanner: TextView
+    private lateinit var btnActivateDpiMain: Button
+    private lateinit var btnDeactivateDpiMain: Button
+    private lateinit var etTargetDpi: EditText
+    private lateinit var btnPreset550: Button
+    private lateinit var btnPreset720: Button
+    private lateinit var btnPreset800: Button
+    private lateinit var btnPreset960: Button
+    private lateinit var btnPreset1200: Button
+    private lateinit var btnPreset1440: Button
+    private lateinit var etBaseDpi: EditText
+    private lateinit var etYAxisBoost: EditText
+    private lateinit var tvDpiTelemetry: TextView
+    private lateinit var btnAdbHelp: Button
+
     private lateinit var switchMasterEnable: SwitchCompat
     private lateinit var switchAutoLockOnGame: SwitchCompat
     private lateinit var switchAutoLandscape: SwitchCompat
     private lateinit var switchAppFilter: SwitchCompat
     private lateinit var tvSelectedAppsSummary: TextView
     private lateinit var btnSelectApps: Button
-
-    private lateinit var switchDpiEngine: SwitchCompat
-    private lateinit var etTargetDpi: EditText
-    private lateinit var btnPreset550: Button
-    private lateinit var btnPreset720: Button
-    private lateinit var btnPreset960: Button
-    private lateinit var btnPreset1200: Button
-    private lateinit var btnPreset1440: Button
-    private lateinit var etBaseDpi: EditText
-    private lateinit var etYAxisBoost: EditText
-    private lateinit var btnApplyExactDpi: Button
-    private lateinit var tvDpiTelemetry: TextView
 
     private lateinit var switchViewBarsOnScreen: SwitchCompat
     private lateinit var switchShowFloatingToggle: SwitchCompat
@@ -143,24 +149,28 @@ class MainActivity : AppCompatActivity() {
         tvServiceStatus = findViewById(R.id.tvServiceStatus)
         btnOpenAppInfo = findViewById(R.id.btnOpenAppInfo)
         btnOpenAccessibility = findViewById(R.id.btnOpenAccessibility)
+
+        tvDpiStatusBanner = findViewById(R.id.tvDpiStatusBanner)
+        btnActivateDpiMain = findViewById(R.id.btnActivateDpiMain)
+        btnDeactivateDpiMain = findViewById(R.id.btnDeactivateDpiMain)
+        etTargetDpi = findViewById(R.id.etTargetDpi)
+        btnPreset550 = findViewById(R.id.btnPreset550)
+        btnPreset720 = findViewById(R.id.btnPreset720)
+        btnPreset800 = findViewById(R.id.btnPreset800)
+        btnPreset960 = findViewById(R.id.btnPreset960)
+        btnPreset1200 = findViewById(R.id.btnPreset1200)
+        btnPreset1440 = findViewById(R.id.btnPreset1440)
+        etBaseDpi = findViewById(R.id.etBaseDpi)
+        etYAxisBoost = findViewById(R.id.etYAxisBoost)
+        tvDpiTelemetry = findViewById(R.id.tvDpiTelemetry)
+        btnAdbHelp = findViewById(R.id.btnAdbHelp)
+
         switchMasterEnable = findViewById(R.id.switchMasterEnable)
         switchAutoLockOnGame = findViewById(R.id.switchAutoLockOnGame)
         switchAutoLandscape = findViewById(R.id.switchAutoLandscape)
         switchAppFilter = findViewById(R.id.switchAppFilter)
         tvSelectedAppsSummary = findViewById(R.id.tvSelectedAppsSummary)
         btnSelectApps = findViewById(R.id.btnSelectApps)
-
-        switchDpiEngine = findViewById(R.id.switchDpiEngine)
-        etTargetDpi = findViewById(R.id.etTargetDpi)
-        btnPreset550 = findViewById(R.id.btnPreset550)
-        btnPreset720 = findViewById(R.id.btnPreset720)
-        btnPreset960 = findViewById(R.id.btnPreset960)
-        btnPreset1200 = findViewById(R.id.btnPreset1200)
-        btnPreset1440 = findViewById(R.id.btnPreset1440)
-        etBaseDpi = findViewById(R.id.etBaseDpi)
-        etYAxisBoost = findViewById(R.id.etYAxisBoost)
-        btnApplyExactDpi = findViewById(R.id.btnApplyExactDpi)
-        tvDpiTelemetry = findViewById(R.id.tvDpiTelemetry)
 
         switchViewBarsOnScreen = findViewById(R.id.switchViewBarsOnScreen)
         switchShowFloatingToggle = findViewById(R.id.switchShowFloatingToggle)
@@ -240,11 +250,10 @@ class MainActivity : AppCompatActivity() {
         switchAppFilter.isChecked = prefManager.isAppFilterEnabled
         updateSelectedAppsSummaryText()
 
-        switchDpiEngine.isChecked = prefManager.isDpiEngineEnabled
         etTargetDpi.setText(prefManager.exactTargetDpi.toString())
         etBaseDpi.setText(prefManager.exactBaseDpi.toString())
         etYAxisBoost.setText(prefManager.yAxisBoostPercent.toString())
-        updateDpiTelemetryView()
+        updateDpiUi()
 
         switchViewBarsOnScreen.isChecked = prefManager.showOverlayInApp
         switchShowFloatingToggle.isChecked = !(prefManager.hideFloatingToggleAlways || prefManager.isPillHiddenManually)
@@ -267,28 +276,39 @@ class MainActivity : AppCompatActivity() {
         radarScreenPreview.invalidate()
     }
 
-    private fun updateDpiTelemetryView() {
+    private fun updateDpiUi() {
         val profile = DpiSensitivityEngine.computeProfile(this, prefManager)
-        val report = DpiSensitivityEngine.formatTelemetryReport(profile)
-        tvDpiTelemetry.text = report
+        val multStr = String.format(Locale.US, "%.2fx", profile.horizontalMultiplier)
+        val yMultStr = String.format(Locale.US, "%.2fx", profile.verticalHeadshotMultiplier)
+
+        if (prefManager.isDpiEngineEnabled) {
+            tvDpiStatusBanner.text = "STATUS: ● ACTIVE (${profile.targetDpi} DP • $multStr X • $yMultStr Y)"
+            tvDpiStatusBanner.setTextColor(Color.parseColor("#00E676"))
+        } else {
+            tvDpiStatusBanner.text = "STATUS: ○ DEACTIVATED (Default ${profile.baseDpi} DP Active)"
+            tvDpiStatusBanner.setTextColor(Color.parseColor("#B0BEC5"))
+        }
+        tvDpiTelemetry.text = DpiSensitivityEngine.formatTelemetryReport(profile)
     }
 
-    private fun applyDpiFromInputs(silent: Boolean) {
-        val targetDpi = etTargetDpi.text.toString().toIntOrNull() ?: prefManager.exactTargetDpi
-        val baseDpi = etBaseDpi.text.toString().toIntOrNull() ?: prefManager.exactBaseDpi
-        val yBoost = etYAxisBoost.text.toString().toIntOrNull() ?: prefManager.yAxisBoostPercent
+    private fun saveDpiInputsToPrefs() {
+        val target = etTargetDpi.text.toString().toIntOrNull() ?: prefManager.exactTargetDpi
+        val base = etBaseDpi.text.toString().toIntOrNull() ?: prefManager.exactBaseDpi
+        val boost = etYAxisBoost.text.toString().toIntOrNull() ?: prefManager.yAxisBoostPercent
 
-        prefManager.exactTargetDpi = targetDpi.coerceIn(320, 3000)
-        prefManager.exactBaseDpi = baseDpi.coerceIn(300, 800)
-        prefManager.yAxisBoostPercent = yBoost.coerceIn(0, 150)
-        prefManager.isDpiEngineEnabled = true
-        switchDpiEngine.isChecked = true
+        prefManager.exactTargetDpi = target.coerceIn(320, 3000)
+        prefManager.exactBaseDpi = base.coerceIn(300, 800)
+        prefManager.yAxisBoostPercent = boost.coerceIn(0, 150)
+    }
+
+    private fun activateDpiFromUi() {
+        saveDpiInputsToPrefs()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.System.canWrite(this)) {
             AlertDialog.Builder(this)
-                .setTitle("⚡ Permission Required for DPI Engine")
-                .setMessage("To adjust hardware digitizer touch velocity and sensitivity without root, Wolver Touch Guard needs 'Modify system settings' permission.\n\nClick 'Grant Permission' below, toggle the switch ON, and return.")
-                .setPositiveButton("Grant Permission") { _, _ ->
+                .setTitle("⚡ Permission Recommended for Touch Gain")
+                .setMessage("To adjust hardware digitizer touch velocity and sampling flags, Wolver Touch Guard can use 'Modify system settings'.\n\nClick 'Grant' to open settings, or 'Continue' to apply system DPI.")
+                .setPositiveButton("Grant") { _, _ ->
                     try {
                         val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS).apply {
                             data = Uri.parse("package:$packageName")
@@ -297,23 +317,34 @@ class MainActivity : AppCompatActivity() {
                     } catch (_: Exception) {
                     }
                 }
-                .setNegativeButton("Skip", null)
+                .setNegativeButton("Continue", null)
                 .show()
         }
 
-        val profile = DpiSensitivityEngine.applyExactDpiSensitivity(this, prefManager)
-        updateDpiTelemetryView()
+        val profile = DpiSensitivityEngine.activateDpi(this, prefManager)
+        updateDpiUi()
         notifyServiceToRefresh()
 
-        if (!silent) {
-            val multStr = String.format(Locale.US, "%.2f", profile.horizontalMultiplier)
-            val yMultStr = String.format(Locale.US, "%.2f", profile.verticalHeadshotMultiplier)
-            Toast.makeText(
-                this,
-                "⚡ Applied: ${profile.targetDpi} DPI (${multStr}x sensitivity, ${yMultStr}x Y-drag)",
-                Toast.LENGTH_SHORT
-            ).show()
-        }
+        val multStr = String.format(Locale.US, "%.2f", profile.horizontalMultiplier)
+        val yMultStr = String.format(Locale.US, "%.2f", profile.verticalHeadshotMultiplier)
+        Toast.makeText(
+            this,
+            "⚡ DPI Activated: ${profile.targetDpi} DP (${multStr}x sensitivity, ${yMultStr}x Y-drag)",
+            Toast.LENGTH_SHORT
+        ).show()
+    }
+
+    private fun deactivateDpiFromUi() {
+        saveDpiInputsToPrefs()
+        val profile = DpiSensitivityEngine.deactivateDpi(this, prefManager)
+        updateDpiUi()
+        notifyServiceToRefresh()
+
+        Toast.makeText(
+            this,
+            "⏸️ DPI Deactivated: Restored to ${profile.baseDpi} DP",
+            Toast.LENGTH_SHORT
+        ).show()
     }
 
     private fun loadZoneIntoSliders(zoneId: Int) {
@@ -388,6 +419,50 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        // DPI ACTIVATION & DEACTIVATION
+        btnActivateDpiMain.setOnClickListener {
+            activateDpiFromUi()
+        }
+
+        btnDeactivateDpiMain.setOnClickListener {
+            deactivateDpiFromUi()
+        }
+
+        // PRESETS
+        val presetMap = mapOf(
+            btnPreset550 to 550,
+            btnPreset720 to 720,
+            btnPreset800 to 800,
+            btnPreset960 to 960,
+            btnPreset1200 to 1200,
+            btnPreset1440 to 1440
+        )
+        presetMap.forEach { (btn, dpi) ->
+            btn.setOnClickListener {
+                etTargetDpi.setText(dpi.toString())
+                prefManager.exactTargetDpi = dpi
+                if (prefManager.isDpiEngineEnabled) {
+                    activateDpiFromUi()
+                } else {
+                    updateDpiUi()
+                }
+            }
+        }
+
+        btnAdbHelp.setOnClickListener {
+            val adbCmd = "adb shell pm grant $packageName android.permission.WRITE_SECURE_SETTINGS"
+            AlertDialog.Builder(this)
+                .setTitle("🔑 System DPI Setup (ADB / Root)")
+                .setMessage("To allow Wolver Touch Guard to switch Developer Options Smallest Width dynamically without manual entry:\n\n• If Rooted: It works automatically!\n\n• If Non-Rooted: Run this command ONCE from a computer or via Shizuku/LADB:\n\n$adbCmd")
+                .setPositiveButton("Copy ADB Command") { _, _ ->
+                    val cm = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    cm.setPrimaryClip(ClipData.newPlainText("ADB Command", adbCmd))
+                    Toast.makeText(this, "Copied to clipboard!", Toast.LENGTH_SHORT).show()
+                }
+                .setNegativeButton("Close", null)
+                .show()
+        }
+
         switchMasterEnable.setOnCheckedChangeListener { _, isChecked ->
             prefManager.isMasterEnabled = isChecked
             notifyServiceToRefresh()
@@ -411,43 +486,6 @@ class MainActivity : AppCompatActivity() {
 
         btnSelectApps.setOnClickListener {
             showAppSelectionDialog()
-        }
-
-        // DPI ENGINE LISTENERS
-        switchDpiEngine.setOnCheckedChangeListener { _, isChecked ->
-            prefManager.isDpiEngineEnabled = isChecked
-            if (isChecked) {
-                applyDpiFromInputs(silent = true)
-            } else {
-                DpiSensitivityEngine.restoreStockSensitivity(this, prefManager)
-                updateDpiTelemetryView()
-            }
-            notifyServiceToRefresh()
-        }
-
-        btnPreset550.setOnClickListener {
-            etTargetDpi.setText("550")
-            applyDpiFromInputs(silent = false)
-        }
-        btnPreset720.setOnClickListener {
-            etTargetDpi.setText("720")
-            applyDpiFromInputs(silent = false)
-        }
-        btnPreset960.setOnClickListener {
-            etTargetDpi.setText("960")
-            applyDpiFromInputs(silent = false)
-        }
-        btnPreset1200.setOnClickListener {
-            etTargetDpi.setText("1200")
-            applyDpiFromInputs(silent = false)
-        }
-        btnPreset1440.setOnClickListener {
-            etTargetDpi.setText("1440")
-            applyDpiFromInputs(silent = false)
-        }
-
-        btnApplyExactDpi.setOnClickListener {
-            applyDpiFromInputs(silent = false)
         }
 
         switchViewBarsOnScreen.setOnCheckedChangeListener { _, isChecked ->

@@ -25,7 +25,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:layout_marginBottom="16dp"
-            android:text="v4.2.0 • Exact DPI Engine • Auto Free Fire Trigger • 6 Zones"
+            android:text="v4.2.1 • Instant DPI Switcher • Auto Free Fire Trigger • 6 Zones"
             android:textColor="@color/text_secondary"
             android:textSize="13sp" />
 
@@ -57,7 +57,7 @@
                     android:id="@+id/tvCurrentVersionBadge"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="v4.2.0"
+                    android:text="v4.2.1"
                     android:textColor="@color/accent_green"
                     android:textSize="12sp"
                     android:textStyle="bold" />
@@ -152,7 +152,7 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- 2. MASTER ENGINE & AUTO-FREE FIRE LAUNCH -->
+        <!-- 2. EXACT DPI SENSITIVITY ENGINE (BASE: 371 DP) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -164,97 +164,63 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="2. AUTO-START IN FREE FIRE &amp; TARGET GAMES"
+                android:text="2. EXACT DPI SENSITIVITY ENGINE (BASE: 371 DP)"
                 android:textColor="@color/accent_green"
-                android:textSize="12sp"
+                android:textSize="13sp"
                 android:textStyle="bold" />
 
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/switchMasterEnable"
+            <!-- STATUS BANNER -->
+            <TextView
+                android:id="@+id/tvDpiStatusBanner"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="Enable Touch Guard Master Engine"
+                android:background="@color/button_dark"
+                android:padding="10dp"
+                android:text="STATUS: ○ DEACTIVATED (Default 371 DP Active)"
                 android:textColor="@color/text_primary"
-                android:textSize="15sp"
+                android:textSize="13sp"
                 android:textStyle="bold" />
 
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/switchAutoLockOnGame"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:text="⚡ Auto-Activate Immediately When Free Fire Opens"
-                android:textColor="@color/accent_green"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/switchAutoLandscape"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:text="🔄 Auto-Run Whenever Phone Enters Landscape"
-                android:textColor="@color/text_primary"
-                android:textSize="14sp" />
-
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/switchAppFilter"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:text="Restrict to Selected Games / Landscape Only"
-                android:textColor="@color/text_primary"
-                android:textSize="14sp" />
-
-            <TextView
-                android:id="@+id/tvSelectedAppsSummary"
+            <!-- 2 PROMINENT BUTTONS: ACTIVATE & DEACTIVATE -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="Selected: com.dts.freefireth, com.dts.freefiremax"
-                android:textColor="@color/accent_green"
-                android:textSize="12sp" />
-
-            <Button
-                android:id="@+id/btnSelectApps"
-                android:layout_width="match_parent"
-                android:layout_height="46dp"
                 android:layout_marginTop="10dp"
-                android:backgroundTint="@color/button_dark"
-                android:text="Choose Target Games / Apps"
-                android:textAllCaps="false"
-                android:textColor="@color/text_primary" />
-        </LinearLayout>
+                android:orientation="horizontal">
 
-        <!-- 3. EXACT DPI SENSITIVITY ENGINE (ZERO SCREEN SHRINK) -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="14dp"
-            android:background="@color/card_dark"
-            android:orientation="vertical"
-            android:padding="16dp">
+                <Button
+                    android:id="@+id/btnActivateDpiMain"
+                    android:layout_width="0dp"
+                    android:layout_height="50dp"
+                    android:layout_marginEnd="6dp"
+                    android:layout_weight="1"
+                    android:backgroundTint="@color/accent_green"
+                    android:text="⚡ ACTIVATE DPI"
+                    android:textAllCaps="false"
+                    android:textColor="@color/bg_pure_black"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="3. EXACT DPI SENSITIVITY ENGINE (ZERO SCREEN SHRINK)"
-                android:textColor="@color/accent_green"
-                android:textSize="12.5sp"
-                android:textStyle="bold" />
-
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/switchDpiEngine"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="6dp"
-                android:text="⚡ Enable Exact Numerical DPI Engine"
-                android:textColor="@color/text_primary"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+                <Button
+                    android:id="@+id/btnDeactivateDpiMain"
+                    android:layout_width="0dp"
+                    android:layout_height="50dp"
+                    android:layout_marginStart="6dp"
+                    android:layout_weight="1"
+                    android:backgroundTint="@color/accent_red"
+                    android:text="⏸️ DEACTIVATE (371)"
+                    android:textAllCaps="false"
+                    android:textColor="@color/text_primary"
+                    android:textSize="13.5sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Target DPI (Type exact number, e.g. 550, 720, 960, 1200, 1440):"
+                android:layout_marginTop="12dp"
+                android:text="Target DPI (Type exact number, e.g. 550, 720, 800, 960, 1200):"
                 android:textColor="@color/text_secondary"
                 android:textSize="12sp" />
 
@@ -285,13 +251,13 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
-                    android:text="DPI"
+                    android:text="DP"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp"
                     android:textStyle="bold" />
             </LinearLayout>
 
-            <!-- QUICK PRESET BUTTONS -->
+            <!-- QUICK PRESET BUTTONS (550, 720, 800, 960, 1200, 1440) -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -320,6 +286,19 @@
                     android:backgroundTint="@color/button_dark"
                     android:padding="0dp"
                     android:text="720"
+                    android:textAllCaps="false"
+                    android:textColor="@color/text_primary"
+                    android:textSize="11.5sp" />
+
+                <Button
+                    android:id="@+id/btnPreset800"
+                    android:layout_width="0dp"
+                    android:layout_height="36dp"
+                    android:layout_marginEnd="3dp"
+                    android:layout_weight="1"
+                    android:backgroundTint="@color/button_dark"
+                    android:padding="0dp"
+                    android:text="800"
                     android:textAllCaps="false"
                     android:textColor="@color/text_primary"
                     android:textSize="11.5sp" />
@@ -380,7 +359,7 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Native Base DPI (411):"
+                        android:text="Native Base DPI (371):"
                         android:textColor="@color/text_secondary"
                         android:textSize="11sp" />
 
@@ -390,12 +369,12 @@
                         android:layout_height="44dp"
                         android:layout_marginTop="4dp"
                         android:background="@color/button_dark"
-                        android:hint="411"
+                        android:hint="371"
                         android:inputType="number"
                         android:maxLength="4"
                         android:paddingStart="10dp"
                         android:paddingEnd="10dp"
-                        android:text="411"
+                        android:text="371"
                         android:textColor="@color/text_primary"
                         android:textSize="13sp" />
                 </LinearLayout>
@@ -431,18 +410,6 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <Button
-                android:id="@+id/btnApplyExactDpi"
-                android:layout_width="match_parent"
-                android:layout_height="46dp"
-                android:layout_marginTop="12dp"
-                android:backgroundTint="@color/accent_green"
-                android:text="⚡ Apply Exact DPI Sensitivity Now"
-                android:textAllCaps="false"
-                android:textColor="@color/bg_pure_black"
-                android:textSize="13sp"
-                android:textStyle="bold" />
-
             <!-- TELEMETRY REPORT -->
             <TextView
                 android:id="@+id/tvDpiTelemetry"
@@ -455,6 +422,90 @@
                 android:textColor="@color/accent_green"
                 android:textSize="11sp"
                 android:typeface="monospace" />
+
+            <!-- ADB PERMISSION HELP BUTTON -->
+            <Button
+                android:id="@+id/btnAdbHelp"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_marginTop="8dp"
+                android:backgroundTint="@color/button_dark"
+                android:text="🔑 ADB Permission Guide (If Unrooted)"
+                android:textAllCaps="false"
+                android:textColor="@color/accent_blue"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <!-- 3. MASTER ENGINE & AUTO-FREE FIRE LAUNCH -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="14dp"
+            android:background="@color/card_dark"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="3. AUTO-START IN FREE FIRE &amp; TARGET GAMES"
+                android:textColor="@color/accent_green"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switchMasterEnable"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:text="Enable Touch Guard Master Engine"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switchAutoLockOnGame"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="⚡ Auto-Activate Immediately When Free Fire Opens"
+                android:textColor="@color/accent_green"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switchAutoLandscape"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="🔄 Auto-Run Whenever Phone Enters Landscape"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switchAppFilter"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="Restrict to Selected Games / Landscape Only"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/tvSelectedAppsSummary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="Selected: com.dts.freefireth, com.dts.freefiremax"
+                android:textColor="@color/accent_green"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/btnSelectApps"
+                android:layout_width="match_parent"
+                android:layout_height="46dp"
+                android:layout_marginTop="10dp"
+                android:backgroundTint="@color/button_dark"
+                android:text="Choose Target Games / Apps"
+                android:textAllCaps="false"
+                android:textColor="@color/text_primary" />
         </LinearLayout>
 
         <!-- 4. FLOATING TOGGLE & IN-GAME CONTROL CENTER -->

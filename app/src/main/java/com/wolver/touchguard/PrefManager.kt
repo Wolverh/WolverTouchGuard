@@ -187,7 +187,7 @@ class PrefManager(private val context: Context) {
         }
 
     var exactBaseDpi: Int
-        get() = prefs.getInt(KEY_EXACT_BASE_DPI, 411).coerceIn(300, 800)
+        get() = prefs.getInt(KEY_EXACT_BASE_DPI, 371).coerceIn(300, 800)
         set(value) {
             prefs.edit().putInt(KEY_EXACT_BASE_DPI, value.coerceIn(300, 800)).apply()
             saveBackupToFile()
@@ -201,7 +201,7 @@ class PrefManager(private val context: Context) {
         }
 
     var isDpiEngineEnabled: Boolean
-        get() = prefs.getBoolean(KEY_DPI_ENGINE_ENABLED, true)
+        get() = prefs.getBoolean(KEY_DPI_ENGINE_ENABLED, false)
         set(value) {
             prefs.edit().putBoolean(KEY_DPI_ENGINE_ENABLED, value).apply()
             saveBackupToFile()
@@ -319,9 +319,9 @@ class PrefManager(private val context: Context) {
         editor.putBoolean(KEY_SHOW_OVERLAY_IN_APP, true)
         editor.putInt(KEY_CURRENT_MODE, MODE_LOCK)
         editor.putInt(KEY_EXACT_TARGET_DPI, 960)
-        editor.putInt(KEY_EXACT_BASE_DPI, 411)
+        editor.putInt(KEY_EXACT_BASE_DPI, 371)
         editor.putInt(KEY_Y_AXIS_BOOST_PCT, 25)
-        editor.putBoolean(KEY_DPI_ENGINE_ENABLED, true)
+        editor.putBoolean(KEY_DPI_ENGINE_ENABLED, false)
         editor.apply()
         saveBackupToFile()
     }

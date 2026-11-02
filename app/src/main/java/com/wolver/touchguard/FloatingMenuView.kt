@@ -81,16 +81,144 @@ class FloatingMenuView(
             gravity = Gravity.CENTER
         }
         val tvSub = TextView(context).apply {
-            text = "Adjust zones, exclude individual blocks, or hide toggle while keeping Guard ON"
+            text = "Instant DPI Switcher, Touch Guard & Stealth Dead-Zone Adjuster"
             setTextColor(Color.parseColor("#AAAAAA"))
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 10.5f)
             gravity = Gravity.CENTER
-            setPadding(0, (2 * density).toInt(), 0, (10 * density).toInt())
+            setPadding(0, (2 * density).toInt(), 0, (8 * density).toInt())
         }
         card.addView(tvTitle)
         card.addView(tvSub)
 
-        // 1. TOP ROW: MODE SWITCHERS
+        // =========================================================================
+        // 1. FIRST PLACE INSIDE: EXACT DPI SENSITIVITY ENGINE (BASE: 371 DP)
+        // =========================================================================
+        val dpiCard = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            val bg = GradientDrawable().apply {
+                setColor(Color.parseColor("#152418"))
+                cornerRadius = 10f * density
+                setStroke((1.5f * density).toInt(), Color.parseColor("#00E676"))
+            }
+            background = bg
+            val p = (10 * density).toInt()
+            setPadding(p, p, p, p)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                bottomMargin = (10 * density).toInt()
+            }
+        }
+
+        val tvDpiSectionTitle = TextView(context).apply {
+            text = "⚡ DPI SENSITIVITY ENGINE (DEFAULT: 371 DP)"
+            setTextColor(Color.parseColor("#00E676"))
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+            typeface = Typeface.DEFAULT_BOLD
+            gravity = Gravity.CENTER
+        }
+        dpiCard.addView(tvDpiSectionTitle)
+
+        val tvDpiLiveStatus = TextView(context).apply {
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
+            gravity = Gravity.CENTER
+            setPadding(0, (2 * density).toInt(), 0, (6 * density).toInt())
+        }
+        dpiCard.addView(tvDpiLiveStatus)
+
+        fun updateDpiUi() {
+            val prof = DpiSensitivityEngine.computeProfile(context, prefManager)
+            val multStr = String.format(Locale.US, "%.2fx", prof.horizontalMultiplier)
+            val yMultStr = String.format(Locale.US, "%.2fx", prof.verticalHeadshotMultiplier)
+            if (prefManager.isDpiEngineEnabled) {
+                tvDpiLiveStatus.text = "● ACTIVE: ${prof.targetDpi} DP ($multStr X-Axis • $yMultStr Y-Drag)"
+                tvDpiLiveStatus.setTextColor(Color.parseColor("#00E676"))
+            } else {
+                tvDpiLiveStatus.text = "○ DEACTIVATED: Stock ${prof.baseDpi} DP Active (Standby)"
+                tvDpiLiveStatus.setTextColor(Color.parseColor("#B0BEC5"))
+            }
+        }
+
+        // ACTIVATION & DEACTIVATION BUTTONS
+        val dpiActionRow = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { bottomMargin = (8 * density).toInt() }
+        }
+
+        val btnActivateDpi = createCompactButton("⚡ ACTIVATE DPI", "#00E676", "#000000", 1.2f) {
+            DpiSensitivityEngine.activateDpi(context, prefManager)
+            updateDpiUi()
+            onStateChanged()
+        }
+
+        val btnDeactivateDpi = createCompactButton("⏸️ DEACTIVATE", "#D50000", "#FFFFFF", 1f) {
+            DpiSensitivityEngine.deactivateDpi(context, prefManager)
+            updateDpiUi()
+            onStateChanged()
+        }
+
+        dpiActionRow.addView(btnActivateDpi)
+        dpiActionRow.addView(btnDeactivateDpi)
+        dpiCard.addView(dpiActionRow)
+
+        // PRESETS ROW (550, 720, 800, 960, 1200)
+        val tvPresetLabel = TextView(context).apply {
+            text = "Target Presets (Default: 371):"
+            setTextColor(Color.parseColor("#CCCCCC"))
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 10.5f)
+            setPadding(0, 0, 0, (4 * density).toInt())
+        }
+        dpiCard.addView(tvPresetLabel)
+
+        val presetRow = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { bottomMargin = (4 * density).toInt() }
+        }
+
+        val presets = listOf(550, 720, 800, 960, 1200)
+        presets.forEach { dpi ->
+            val b = Button(context).apply {
+                text = dpi.toString()
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
+                setTextColor(Color.WHITE)
+                isAllCaps = false
+                setPadding(0, 0, 0, 0)
+                background = GradientDrawable().apply {
+                    setColor(Color.parseColor(if (prefManager.exactTargetDpi == dpi) "#00C853" else "#212121"))
+                    cornerRadius = 6f * density
+                    setStroke((1 * density).toInt(), Color.parseColor("#44FFFFFF"))
+                }
+                layoutParams = LinearLayout.LayoutParams(0, (32 * density).toInt(), 1f).apply {
+                    marginEnd = (3 * density).toInt()
+                }
+                setOnClickListener {
+                    prefManager.exactTargetDpi = dpi
+                    if (prefManager.isDpiEngineEnabled) {
+                        DpiSensitivityEngine.activateDpi(context, prefManager)
+                    }
+                    updateDpiUi()
+                    onStateChanged()
+                }
+            }
+            presetRow.addView(b)
+        }
+        dpiCard.addView(presetRow)
+
+        card.addView(dpiCard)
+        updateDpiUi()
+
+        addDivider(card)
+
+        // =========================================================================
+        // 2. MODE SWITCHERS: LOCK, EDIT BARS, PAUSE
+        // =========================================================================
         val modeRow = LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL
             layoutParams = LinearLayout.LayoutParams(
@@ -123,35 +251,21 @@ class FloatingMenuView(
         modeRow.addView(btnPause)
         card.addView(modeRow)
 
-        // 2. HIDE TOGGLE ONLY (KEEP BLOCKING ACTIVE)
+        // 3. HIDE TOGGLE ONLY (KEEP BLOCKING ACTIVE)
         val btnHideToggleOnly = createFullButton(
             text = "🚫 HIDE TOGGLE BAR (KEEP BLOCKAGE 100% ACTIVE)",
             bgColor = "#D50000",
             textColor = "#FFFFFF"
         ) {
-            // Force Lock Mode ON so blockage is guaranteed active when hiding toggle!
             prefManager.currentMode = PrefManager.MODE_LOCK
             onHideToggleOnlyClicked()
             onDismissClicked()
         }
         card.addView(btnHideToggleOnly)
 
-        // 2.5 DPI ENGINE STATUS TELEMETRY
-        val profile = DpiSensitivityEngine.computeProfile(context, prefManager)
-        val tvDpiStatus = TextView(context).apply {
-            val multStr = String.format(Locale.US, "%.2fx", profile.horizontalMultiplier)
-            text = "⚡ DPI Engine: ${profile.targetDpi} DPI ($multStr Multiplier • +${profile.yAxisBoostPercent}% Y-Boost)"
-            setTextColor(Color.parseColor("#00E676"))
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
-            typeface = Typeface.DEFAULT_BOLD
-            gravity = Gravity.CENTER
-            setPadding(0, (6 * density).toInt(), 0, (2 * density).toInt())
-        }
-        card.addView(tvDpiStatus)
-
         addDivider(card)
 
-        // 3. INCLUDE / EXCLUDE SPECIFIC BLOCKS (ZONE CHECKBOXES Z1 - Z6)
+        // 4. INCLUDE / EXCLUDE SPECIFIC BLOCKS (ZONE CHECKBOXES Z1 - Z6)
         val tvIncludeHeader = TextView(context).apply {
             text = "ACTIVE BLOCKS (UNCHECK TO EXCLUDE A BLOCK):"
             setTextColor(Color.parseColor("#00E676"))
@@ -185,7 +299,7 @@ class FloatingMenuView(
 
         addDivider(card)
 
-        // 4. IN-GAME LIVE ZONE ADJUSTER (SELECT Z1-Z6 AND TWEAK X, Y, W, H)
+        // 5. IN-GAME LIVE ZONE ADJUSTER (SELECT Z1-Z6 AND TWEAK X, Y, W, H)
         val tvAdjustHeader = TextView(context).apply {
             text = "LIVE IN-GAME BLOCK ADJUSTER (TAP ZONE TO EDIT):"
             setTextColor(Color.parseColor("#2979FF"))
@@ -245,7 +359,7 @@ class FloatingMenuView(
 
         addDivider(card)
 
-        // 5. BOTTOM ACTIONS
+        // 6. BOTTOM ACTIONS
         val bottomRow = LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL
             layoutParams = LinearLayout.LayoutParams(

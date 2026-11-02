@@ -11,8 +11,8 @@ android {
         applicationId = "com.wolver.touchguard.pro"
         minSdk = 26
         targetSdk = 35
-        versionCode = 8
-        versionName = "4.2.0"
+        versionCode = 9
+        versionName = "4.2.1"
     }
 
     buildFeatures {

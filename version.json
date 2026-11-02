@@ -1,6 +1,6 @@
 {
-  "versionCode": 8,
-  "versionName": "4.2.0",
+  "versionCode": 9,
+  "versionName": "4.2.1",
   "downloadUrl": "https://github.com/Wolverh/WolverTouchGuard/releases/download/latest/app-debug.apk",
-  "changelog": "v4.2.0 Major Feature Update:\n• Exact Numerical DPI Sensitivity Engine with zero screen shrinkage.\n• Input exact Target DPI (550, 720, 960, 1200, 1440, up to 3000 DPI) and Y-Axis Headshot Drag Boost %.\n• Live Mathematical DPI multiplier telemetry and in-game sensitivity status.\n• 100% preservation of Wolver Touch Guard v4.1.0 (Volume Up+Down unhide shortcut, 6 zones, in-game control menu, 144Hz high refresh rate).\n• Permanent release signing key prevents package conflict errors."
+  "changelog": "v4.2.1 DPI Sensitivity Engine Fix & Enhancements:\n• Base DPI set to exact default 371 DP.\n• DPI feature placed at the FIRST PLACE INSIDE the floating in-game bar (FloatingMenuView) and main screen.\n• Dedicated, prominent ACTIVATE DPI and DEACTIVATE DPI buttons for instant 1-tap switching.\n• True system density switching (su wm density, Settings.Secure display_density_forced, OEM touch boost).\n• All v4.1.0 features 100% preserved (Volume Up+Down unhide shortcut, 6 zones, 144Hz multi-touch).\n• Permanent release signing key prevents package conflicts."
 }
