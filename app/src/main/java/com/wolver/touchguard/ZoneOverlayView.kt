@@ -26,12 +26,10 @@ class ZoneOverlayView(
         private const val HANDLE_BOTTOM_RIGHT = 4
     }
 
-    var isPillAt: ((rawX: Float, rawY: Float) -> Boolean)? = null
-    var onPillTouchForward: ((event: MotionEvent) -> Unit)? = null
-
-    private var currentMode: Int = PrefManager.MODE_LOCK
-    private var editOpacityPercent: Int = 50
+    private var currentMode: Int = PrefManager.MODE_EDIT
+    private var editOpacityPercent: Int = 40
     private var showLockBorder: Boolean = false
+    private var unbufferedTouchEnabled: Boolean = true
 
     private var posX: Int = 0
     private var posY: Int = 0
@@ -39,10 +37,10 @@ class ZoneOverlayView(
     private var zoneH: Int = 200
 
     private val density = resources.displayMetrics.density
-    private val handleSizePx = 30f * density
+    private val handleSizePx = 32f * density
     private val touchSlopHandlePx = 42f * density
-    private val minWidthPx = (30f * density).toInt()
-    private val minHeightPx = (30f * density).toInt()
+    private val minWidthPx = (40f * density).toInt()
+    private val minHeightPx = (35f * density).toInt()
 
     private val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
@@ -75,12 +73,6 @@ class ZoneOverlayView(
     private var initialW = 0
     private var initialH = 0
 
-    init {
-        setWillNotDraw(false)
-        isClickable = true
-        isFocusable = false
-    }
-
     fun updateState(
         x: Int,
         y: Int,
@@ -88,7 +80,8 @@ class ZoneOverlayView(
         h: Int,
         mode: Int,
         opacityPercent: Int,
-        lockBorder: Boolean
+        lockBorder: Boolean,
+        unbufferedTouch: Boolean
     ) {
         posX = x
         posY = y
@@ -97,6 +90,7 @@ class ZoneOverlayView(
         currentMode = mode
         editOpacityPercent = opacityPercent
         showLockBorder = lockBorder
+        unbufferedTouchEnabled = unbufferedTouch
         invalidate()
     }
 
@@ -108,7 +102,7 @@ class ZoneOverlayView(
 
         when (currentMode) {
             PrefManager.MODE_EDIT -> {
-                val alpha = ((editOpacityPercent / 100f) * 255).toInt().coerceIn(30, 225)
+                val alpha = ((editOpacityPercent / 100f) * 255).toInt().coerceIn(30, 220)
                 fillPaint.color = Color.argb(alpha, 255, 23, 68)
                 canvas.drawRect(0f, 0f, w, h, fillPaint)
 
@@ -128,22 +122,16 @@ class ZoneOverlayView(
                 handleRect.set(w - handleSizePx, h - handleSizePx, w, h)
                 canvas.drawRect(handleRect, handlePaint)
 
-                val info = "Z$zoneId [${zoneW}x${zoneH}]"
-                val textY = (h / 2f).coerceIn(18f * density, (h - 8f * density).coerceAtLeast(18f * density))
-                canvas.drawText(info, 8f * density, textY, textPaint)
+                val info = "$title [X:$posX Y:$posY | ${zoneW}x${zoneH}]"
+                val textY = (h / 2f).coerceIn(20f * density, (h - 10f * density).coerceAtLeast(20f * density))
+                canvas.drawText(info, 10f * density, textY, textPaint)
             }
 
             PrefManager.MODE_LOCK -> {
                 if (showLockBorder) {
-                    fillPaint.color = Color.argb(22, 0, 230, 118)
-                    canvas.drawRect(0f, 0f, w, h, fillPaint)
-                    borderPaint.color = Color.parseColor("#7700E676")
-                    borderPaint.strokeWidth = 2f * density
+                    borderPaint.color = Color.parseColor("#18FF1744")
+                    borderPaint.strokeWidth = 1.5f * density
                     canvas.drawRect(1f, 1f, w - 1f, h - 1f, borderPaint)
-                } else {
-                    // Draw a 2/255 alpha pixel so Android hardware compositor NEVER optimizes away hit-testing
-                    fillPaint.color = Color.argb(2, 0, 0, 0)
-                    canvas.drawRect(0f, 0f, w, h, fillPaint)
                 }
             }
 
@@ -172,12 +160,13 @@ class ZoneOverlayView(
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        if (isPillAt?.invoke(event.rawX, event.rawY) == true) {
-            onPillTouchForward?.invoke(event)
-            return true
+        if (unbufferedTouchEnabled && event.actionMasked == MotionEvent.ACTION_DOWN) {
+            try {
+                requestUnbufferedDispatch(event)
+            } catch (_: Exception) {
+            }
         }
 
-        // In LOCK mode: swallow 100% of touches silently so accidental touches never reach the game
         if (currentMode == PrefManager.MODE_LOCK) {
             return true
         }
@@ -203,8 +192,8 @@ class ZoneOverlayView(
                 val dy = (event.rawY - initialTouchRawY).toInt()
 
                 val metrics = resources.displayMetrics
-                val maxScreenW = maxOf(metrics.widthPixels, metrics.heightPixels, 2644)
-                val maxScreenH = maxOf(metrics.widthPixels, metrics.heightPixels, 2644)
+                val maxScreenW = metrics.widthPixels
+                val maxScreenH = metrics.heightPixels
 
                 when (activeHandle) {
                     HANDLE_BOTTOM_RIGHT -> {

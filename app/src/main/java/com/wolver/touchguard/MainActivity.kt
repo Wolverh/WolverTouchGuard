@@ -9,11 +9,12 @@ import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.accessibility.AccessibilityManager
+import android.view.inputmethod.InputMethodManager
 import android.widget.Button
+import android.widget.EditText
 import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
@@ -22,39 +23,35 @@ import androidx.appcompat.widget.SwitchCompat
 
 class MainActivity : AppCompatActivity() {
 
-    companion object {
-        @Volatile
-        var isActivityInForeground: Boolean = false
-            private set
-    }
-
     private lateinit var prefManager: PrefManager
-
-    private lateinit var tvCurrentVersionBadge: TextView
-    private lateinit var tvUpdateStatus: TextView
-    private lateinit var btnCheckUpdate: Button
 
     private lateinit var tvServiceStatus: TextView
     private lateinit var btnOpenAppInfo: Button
     private lateinit var btnOpenAccessibility: Button
     private lateinit var switchMasterEnable: SwitchCompat
-    private lateinit var switchAutoLockOnGame: SwitchCompat
-    private lateinit var switchAutoLandscape: SwitchCompat
     private lateinit var switchAppFilter: SwitchCompat
     private lateinit var tvSelectedAppsSummary: TextView
     private lateinit var btnSelectApps: Button
 
-    private lateinit var switchViewBarsOnScreen: SwitchCompat
-    private lateinit var switchShowFloatingToggle: SwitchCompat
-    private lateinit var btnOpenInGameMenuNow: Button
-    private lateinit var radarScreenPreview: ScreenRadarView
+    private lateinit var tvWriteSettingsStatus: TextView
+    private lateinit var btnGrantWriteSettings: Button
+    private lateinit var switchDpiEngine: SwitchCompat
+    private lateinit var etTargetDpi: EditText
+    private lateinit var etBaseDpi: EditText
+    private lateinit var etYAxisBoost: EditText
+    private lateinit var btnApplyExactDpi: Button
+    private lateinit var btnPreset550: Button
+    private lateinit var btnPreset720: Button
+    private lateinit var btnPreset960: Button
+    private lateinit var btnPreset1200: Button
+    private lateinit var btnPreset1440: Button
+    private lateinit var tvDpiTelemetry: TextView
+    private lateinit var switchUnbufferedTouch: SwitchCompat
 
     private lateinit var switchZone1: SwitchCompat
     private lateinit var switchZone2: SwitchCompat
     private lateinit var switchZone3: SwitchCompat
     private lateinit var switchZone4: SwitchCompat
-    private lateinit var switchZone5: SwitchCompat
-    private lateinit var switchZone6: SwitchCompat
 
     private lateinit var switchHidePillInLock: SwitchCompat
     private lateinit var switchLockBorder: SwitchCompat
@@ -65,8 +62,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnSelectZ2: Button
     private lateinit var btnSelectZ3: Button
     private lateinit var btnSelectZ4: Button
-    private lateinit var btnSelectZ5: Button
-    private lateinit var btnSelectZ6: Button
     private lateinit var tvEditingZoneTitle: TextView
     private lateinit var tvZoneX: TextView
     private lateinit var seekZoneX: SeekBar
@@ -88,66 +83,46 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // 144Hz high refresh rate screen support
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            try {
-                val maxRefresh = display?.supportedModes?.maxOfOrNull { it.refreshRate } ?: 144f
-                if (maxRefresh > 60f) {
-                    window.attributes.preferredRefreshRate = maxRefresh
-                }
-            } catch (_: Exception) {
-            }
-        }
-
         prefManager = PrefManager(this)
         bindViews()
         setupListeners()
-
-        checkAppUpdates(showToastIfLatest = false)
     }
 
     override fun onResume() {
         super.onResume()
-        isActivityInForeground = true
         syncUiWithPrefs()
         updateServiceStatusBanner()
-        notifyServiceToRefresh()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        isActivityInForeground = false
-        notifyServiceToRefresh()
+        updateWriteSettingsStatusBanner()
     }
 
     private fun bindViews() {
-        tvCurrentVersionBadge = findViewById(R.id.tvCurrentVersionBadge)
-        tvUpdateStatus = findViewById(R.id.tvUpdateStatus)
-        btnCheckUpdate = findViewById(R.id.btnCheckUpdate)
-        tvCurrentVersionBadge.text = "v${BuildConfig.VERSION_NAME}"
-
         tvServiceStatus = findViewById(R.id.tvServiceStatus)
         btnOpenAppInfo = findViewById(R.id.btnOpenAppInfo)
         btnOpenAccessibility = findViewById(R.id.btnOpenAccessibility)
         switchMasterEnable = findViewById(R.id.switchMasterEnable)
-        switchAutoLockOnGame = findViewById(R.id.switchAutoLockOnGame)
-        switchAutoLandscape = findViewById(R.id.switchAutoLandscape)
         switchAppFilter = findViewById(R.id.switchAppFilter)
         tvSelectedAppsSummary = findViewById(R.id.tvSelectedAppsSummary)
         btnSelectApps = findViewById(R.id.btnSelectApps)
 
-        switchViewBarsOnScreen = findViewById(R.id.switchViewBarsOnScreen)
-        switchShowFloatingToggle = findViewById(R.id.switchShowFloatingToggle)
-        btnOpenInGameMenuNow = findViewById(R.id.btnOpenInGameMenuNow)
-        radarScreenPreview = findViewById(R.id.radarScreenPreview)
-        radarScreenPreview.prefManager = prefManager
+        tvWriteSettingsStatus = findViewById(R.id.tvWriteSettingsStatus)
+        btnGrantWriteSettings = findViewById(R.id.btnGrantWriteSettings)
+        switchDpiEngine = findViewById(R.id.switchDpiEngine)
+        etTargetDpi = findViewById(R.id.etTargetDpi)
+        etBaseDpi = findViewById(R.id.etBaseDpi)
+        etYAxisBoost = findViewById(R.id.etYAxisBoost)
+        btnApplyExactDpi = findViewById(R.id.btnApplyExactDpi)
+        btnPreset550 = findViewById(R.id.btnPreset550)
+        btnPreset720 = findViewById(R.id.btnPreset720)
+        btnPreset960 = findViewById(R.id.btnPreset960)
+        btnPreset1200 = findViewById(R.id.btnPreset1200)
+        btnPreset1440 = findViewById(R.id.btnPreset1440)
+        tvDpiTelemetry = findViewById(R.id.tvDpiTelemetry)
+        switchUnbufferedTouch = findViewById(R.id.switchUnbufferedTouch)
 
         switchZone1 = findViewById(R.id.switchZone1)
         switchZone2 = findViewById(R.id.switchZone2)
         switchZone3 = findViewById(R.id.switchZone3)
         switchZone4 = findViewById(R.id.switchZone4)
-        switchZone5 = findViewById(R.id.switchZone5)
-        switchZone6 = findViewById(R.id.switchZone6)
 
         switchHidePillInLock = findViewById(R.id.switchHidePillInLock)
         switchLockBorder = findViewById(R.id.switchLockBorder)
@@ -158,8 +133,6 @@ class MainActivity : AppCompatActivity() {
         btnSelectZ2 = findViewById(R.id.btnSelectZ2)
         btnSelectZ3 = findViewById(R.id.btnSelectZ3)
         btnSelectZ4 = findViewById(R.id.btnSelectZ4)
-        btnSelectZ5 = findViewById(R.id.btnSelectZ5)
-        btnSelectZ6 = findViewById(R.id.btnSelectZ6)
         tvEditingZoneTitle = findViewById(R.id.tvEditingZoneTitle)
         tvZoneX = findViewById(R.id.tvZoneX)
         seekZoneX = findViewById(R.id.seekZoneX)
@@ -175,54 +148,22 @@ class MainActivity : AppCompatActivity() {
         btnResetZones = findViewById(R.id.btnResetZones)
     }
 
-    private fun checkAppUpdates(showToastIfLatest: Boolean) {
-        tvUpdateStatus.text = "Checking GitHub for updates..."
-        tvUpdateStatus.setTextColor(Color.parseColor("#B0B0B0"))
-
-        UpdateManager.check(this) { info ->
-            if (info == null) {
-                tvUpdateStatus.text = "Could not reach update server. Check internet connection."
-                tvUpdateStatus.setTextColor(Color.parseColor("#FF5252"))
-                if (showToastIfLatest) {
-                    Toast.makeText(this, "Could not check for updates", Toast.LENGTH_SHORT).show()
-                }
-            } else if (info.hasUpdate) {
-                tvUpdateStatus.text = "🚀 New version v${info.latestVersionName} available! Tap to install."
-                tvUpdateStatus.setTextColor(Color.parseColor("#00E676"))
-                UpdateManager.showUpdateDialog(this, info)
-            } else {
-                tvUpdateStatus.text = "● Running latest version (v${BuildConfig.VERSION_NAME})."
-                tvUpdateStatus.setTextColor(Color.parseColor("#00E676"))
-                if (showToastIfLatest) {
-                    AlertDialog.Builder(this)
-                        .setTitle("Up to Date (v${BuildConfig.VERSION_NAME})")
-                        .setMessage("You are already on the latest version.\n\nWould you like to force re-download and install the latest APK from GitHub anyway?")
-                        .setPositiveButton("Force Download & Install") { _, _ ->
-                            UpdateManager.startDirectInAppDownload(this, info)
-                        }
-                        .setNegativeButton("Close", null)
-                        .show()
-                }
-            }
-        }
-    }
-
     private fun syncUiWithPrefs() {
         switchMasterEnable.isChecked = prefManager.isMasterEnabled
-        switchAutoLockOnGame.isChecked = prefManager.isAutoLockOnGameLaunch
-        switchAutoLandscape.isChecked = prefManager.isAutoLandscapeEnabled
         switchAppFilter.isChecked = prefManager.isAppFilterEnabled
         updateSelectedAppsSummaryText()
 
-        switchViewBarsOnScreen.isChecked = prefManager.showOverlayInApp
-        switchShowFloatingToggle.isChecked = !(prefManager.hideFloatingToggleAlways || prefManager.isPillHiddenManually)
+        switchDpiEngine.isChecked = prefManager.isDpiEngineEnabled
+        etTargetDpi.setText(prefManager.exactTargetDpi.toString())
+        etBaseDpi.setText(prefManager.exactBaseDpi.toString())
+        etYAxisBoost.setText(prefManager.yAxisBoostPercent.toString())
+        switchUnbufferedTouch.isChecked = prefManager.isUnbufferedTouchEnabled
+        refreshDpiTelemetryBox()
 
         switchZone1.isChecked = prefManager.isZoneEnabled(1)
         switchZone2.isChecked = prefManager.isZoneEnabled(2)
         switchZone3.isChecked = prefManager.isZoneEnabled(3)
         switchZone4.isChecked = prefManager.isZoneEnabled(4)
-        switchZone5.isChecked = prefManager.isZoneEnabled(5)
-        switchZone6.isChecked = prefManager.isZoneEnabled(6)
 
         switchHidePillInLock.isChecked = prefManager.hidePillInLockMode
         switchLockBorder.isChecked = prefManager.showLockBorder
@@ -232,15 +173,61 @@ class MainActivity : AppCompatActivity() {
         tvOpacityValue.text = "Edit Mode Red Opacity: $opacity%"
 
         loadZoneIntoSliders(currentlySelectedZoneForSliders)
-        radarScreenPreview.invalidate()
+    }
+
+    private fun refreshDpiTelemetryBox() {
+        val profile = DpiSensitivityEngine.computeProfile(this, prefManager)
+        tvDpiTelemetry.text = DpiSensitivityEngine.formatTelemetryReport(profile)
+    }
+
+    private fun parseAndApplyExactDpiInputs() {
+        val rawTarget = etTargetDpi.text?.toString()?.trim()?.toIntOrNull() ?: 960
+        val rawBase = etBaseDpi.text?.toString()?.trim()?.toIntOrNull() ?: 411
+        val rawYBoost = etYAxisBoost.text?.toString()?.trim()?.toIntOrNull() ?: 25
+
+        val clampedTarget = rawTarget.coerceIn(320, 3000)
+        val clampedBase = rawBase.coerceIn(300, 800)
+        val clampedYBoost = rawYBoost.coerceIn(0, 150)
+
+        prefManager.exactTargetDpi = clampedTarget
+        prefManager.exactBaseDpi = clampedBase
+        prefManager.yAxisBoostPercent = clampedYBoost
+
+        etTargetDpi.setText(clampedTarget.toString())
+        etBaseDpi.setText(clampedBase.toString())
+        etYAxisBoost.setText(clampedYBoost.toString())
+
+        hideKeyboard()
+        refreshDpiTelemetryBox()
+        notifyServiceToRefresh()
+
+        Toast.makeText(
+            this,
+            "Applied Exact $clampedTarget DPI Sensitivity (Zero Screen Shrink)",
+            Toast.LENGTH_SHORT
+        ).show()
+    }
+
+    private fun applyQuickDpiPreset(presetDpi: Int) {
+        etTargetDpi.setText(presetDpi.toString())
+        parseAndApplyExactDpiInputs()
+    }
+
+    private fun hideKeyboard() {
+        try {
+            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+            currentFocus?.windowToken?.let { token ->
+                imm?.hideSoftInputFromWindow(token, 0)
+            }
+        } catch (_: Exception) {
+        }
     }
 
     private fun loadZoneIntoSliders(zoneId: Int) {
         currentlySelectedZoneForSliders = zoneId
-        radarScreenPreview.selectedZoneId = zoneId
         isUpdatingSlidersProgrammatically = true
 
-        val buttons = listOf(btnSelectZ1, btnSelectZ2, btnSelectZ3, btnSelectZ4, btnSelectZ5, btnSelectZ6)
+        val buttons = listOf(btnSelectZ1, btnSelectZ2, btnSelectZ3, btnSelectZ4)
         buttons.forEachIndexed { index, button ->
             val color = if (index + 1 == zoneId) "#FF1744" else "#1E1E1E"
             button.backgroundTintList = ColorStateList.valueOf(Color.parseColor(color))
@@ -255,14 +242,13 @@ class MainActivity : AppCompatActivity() {
         seekZoneY.progress = cfg.y.coerceIn(0, seekZoneY.max)
         tvZoneY.text = "Vertical Position (Y): ${cfg.y} px"
 
-        seekZoneW.progress = cfg.width.coerceIn(30, seekZoneW.max)
+        seekZoneW.progress = cfg.width.coerceIn(40, seekZoneW.max)
         tvZoneW.text = "Zone Width: ${cfg.width} px"
 
-        seekZoneH.progress = cfg.height.coerceIn(30, seekZoneH.max)
+        seekZoneH.progress = cfg.height.coerceIn(35, seekZoneH.max)
         tvZoneH.text = "Zone Height: ${cfg.height} px"
 
         isUpdatingSlidersProgrammatically = false
-        radarScreenPreview.invalidate()
     }
 
     private fun saveCurrentSliderValuesToZone() {
@@ -270,8 +256,8 @@ class MainActivity : AppCompatActivity() {
         val id = currentlySelectedZoneForSliders
         val newX = seekZoneX.progress
         val newY = seekZoneY.progress
-        val newW = seekZoneW.progress.coerceAtLeast(30)
-        val newH = seekZoneH.progress.coerceAtLeast(30)
+        val newW = seekZoneW.progress.coerceAtLeast(40)
+        val newH = seekZoneH.progress.coerceAtLeast(35)
 
         tvZoneX.text = "Horizontal Position (X): $newX px"
         tvZoneY.text = "Vertical Position (Y): $newY px"
@@ -279,15 +265,10 @@ class MainActivity : AppCompatActivity() {
         tvZoneH.text = "Zone Height: $newH px"
 
         prefManager.saveZoneBounds(id, newX, newY, newW, newH)
-        radarScreenPreview.invalidate()
         notifyServiceToRefresh()
     }
 
     private fun setupListeners() {
-        btnCheckUpdate.setOnClickListener {
-            checkAppUpdates(showToastIfLatest = true)
-        }
-
         btnOpenAppInfo.setOnClickListener {
             try {
                 val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
@@ -310,17 +291,6 @@ class MainActivity : AppCompatActivity() {
         switchMasterEnable.setOnCheckedChangeListener { _, isChecked ->
             prefManager.isMasterEnabled = isChecked
             notifyServiceToRefresh()
-            radarScreenPreview.invalidate()
-        }
-
-        switchAutoLockOnGame.setOnCheckedChangeListener { _, isChecked ->
-            prefManager.isAutoLockOnGameLaunch = isChecked
-            notifyServiceToRefresh()
-        }
-
-        switchAutoLandscape.setOnCheckedChangeListener { _, isChecked ->
-            prefManager.isAutoLandscapeEnabled = isChecked
-            notifyServiceToRefresh()
         }
 
         switchAppFilter.setOnCheckedChangeListener { _, isChecked ->
@@ -332,64 +302,55 @@ class MainActivity : AppCompatActivity() {
             showAppSelectionDialog()
         }
 
-        switchViewBarsOnScreen.setOnCheckedChangeListener { _, isChecked ->
-            prefManager.showOverlayInApp = isChecked
-            notifyServiceToRefresh()
-        }
-
-        switchShowFloatingToggle.setOnCheckedChangeListener { _, isChecked ->
-            prefManager.hideFloatingToggleAlways = !isChecked
-            prefManager.isPillHiddenManually = !isChecked
-            notifyServiceToRefresh()
-            val msg = if (isChecked) {
-                "Floating toggle bar VISIBLE"
-            } else {
-                "Floating toggle HIDDEN (Touch blockage stays 100% ACTIVE!)"
-            }
-            Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
-        }
-
-        btnOpenInGameMenuNow.setOnClickListener {
-            val svc = TouchGuardAccessibilityService.instance
-            if (svc == null) {
-                Toast.makeText(this, "Enable Accessibility Service first!", Toast.LENGTH_SHORT).show()
-            } else {
-                svc.showFloatingMenuFromApp()
+        btnGrantWriteSettings.setOnClickListener {
+            try {
+                val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS).apply {
+                    data = Uri.fromParts("package", packageName, null)
+                }
+                startActivity(intent)
+            } catch (_: Exception) {
+                Toast.makeText(this, "Could not open Modify System Settings screen", Toast.LENGTH_SHORT).show()
             }
         }
 
-        radarScreenPreview.onZoneSelected = { zoneId ->
-            loadZoneIntoSliders(zoneId)
+        switchDpiEngine.setOnCheckedChangeListener { _, isChecked ->
+            prefManager.isDpiEngineEnabled = isChecked
+            refreshDpiTelemetryBox()
+            notifyServiceToRefresh()
+        }
+
+        btnApplyExactDpi.setOnClickListener {
+            parseAndApplyExactDpiInputs()
+        }
+
+        btnPreset550.setOnClickListener { applyQuickDpiPreset(550) }
+        btnPreset720.setOnClickListener { applyQuickDpiPreset(720) }
+        btnPreset960.setOnClickListener { applyQuickDpiPreset(960) }
+        btnPreset1200.setOnClickListener { applyQuickDpiPreset(1200) }
+        btnPreset1440.setOnClickListener { applyQuickDpiPreset(1440) }
+
+        switchUnbufferedTouch.setOnCheckedChangeListener { _, isChecked ->
+            prefManager.isUnbufferedTouchEnabled = isChecked
+            notifyServiceToRefresh()
         }
 
         switchZone1.setOnCheckedChangeListener { _, isChecked ->
             prefManager.setZoneEnabled(1, isChecked)
-            radarScreenPreview.invalidate()
             notifyServiceToRefresh()
         }
+
         switchZone2.setOnCheckedChangeListener { _, isChecked ->
             prefManager.setZoneEnabled(2, isChecked)
-            radarScreenPreview.invalidate()
             notifyServiceToRefresh()
         }
+
         switchZone3.setOnCheckedChangeListener { _, isChecked ->
             prefManager.setZoneEnabled(3, isChecked)
-            radarScreenPreview.invalidate()
             notifyServiceToRefresh()
         }
+
         switchZone4.setOnCheckedChangeListener { _, isChecked ->
             prefManager.setZoneEnabled(4, isChecked)
-            radarScreenPreview.invalidate()
-            notifyServiceToRefresh()
-        }
-        switchZone5.setOnCheckedChangeListener { _, isChecked ->
-            prefManager.setZoneEnabled(5, isChecked)
-            radarScreenPreview.invalidate()
-            notifyServiceToRefresh()
-        }
-        switchZone6.setOnCheckedChangeListener { _, isChecked ->
-            prefManager.setZoneEnabled(6, isChecked)
-            radarScreenPreview.invalidate()
             notifyServiceToRefresh()
         }
 
@@ -405,13 +366,14 @@ class MainActivity : AppCompatActivity() {
 
         seekBarEditOpacity.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                val clamped = progress.coerceIn(15, 95)
+                val clamped = progress.coerceIn(15, 85)
                 tvOpacityValue.text = "Edit Mode Red Opacity: $clamped%"
                 if (fromUser) {
                     prefManager.editOpacityPercent = clamped
                     notifyServiceToRefresh()
                 }
             }
+
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
         })
@@ -420,8 +382,6 @@ class MainActivity : AppCompatActivity() {
         btnSelectZ2.setOnClickListener { loadZoneIntoSliders(2) }
         btnSelectZ3.setOnClickListener { loadZoneIntoSliders(3) }
         btnSelectZ4.setOnClickListener { loadZoneIntoSliders(4) }
-        btnSelectZ5.setOnClickListener { loadZoneIntoSliders(5) }
-        btnSelectZ6.setOnClickListener { loadZoneIntoSliders(6) }
 
         val sliderListener = object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
@@ -429,6 +389,7 @@ class MainActivity : AppCompatActivity() {
                     saveCurrentSliderValuesToZone()
                 }
             }
+
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
         }
@@ -439,33 +400,23 @@ class MainActivity : AppCompatActivity() {
         seekZoneH.setOnSeekBarChangeListener(sliderListener)
 
         btnForceEditMode.setOnClickListener {
-            prefManager.isMasterEnabled = true
             prefManager.isPillHiddenManually = false
-            prefManager.hideFloatingToggleAlways = false
-            prefManager.showOverlayInApp = true
             prefManager.currentMode = PrefManager.MODE_EDIT
-            syncUiWithPrefs()
             notifyServiceToRefresh()
-            Toast.makeText(this, "✏️ Edit Mode Active: Drag red bars to adjust.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Edit Mode Active & Pill Unhidden", Toast.LENGTH_SHORT).show()
         }
 
         btnForceLockMode.setOnClickListener {
-            prefManager.isMasterEnabled = true
             prefManager.currentMode = PrefManager.MODE_LOCK
-            syncUiWithPrefs()
             notifyServiceToRefresh()
-            Toast.makeText(
-                this,
-                "🔒 Locked In! Touch blocking is ACTIVE.",
-                Toast.LENGTH_LONG
-            ).show()
+            Toast.makeText(this, "Lock Mode Active (100% Touch Blocking & Exact DPI)", Toast.LENGTH_SHORT).show()
         }
 
         btnResetZones.setOnClickListener {
             prefManager.resetZonesToDefaults()
             syncUiWithPrefs()
             notifyServiceToRefresh()
-            Toast.makeText(this, "All 6 zones restored to defaults", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "All 4 zones reset & pill unhidden", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -541,6 +492,17 @@ class MainActivity : AppCompatActivity() {
         } else {
             tvServiceStatus.text = "● INACTIVE — Enable in Accessibility Settings"
             tvServiceStatus.setTextColor(Color.parseColor("#FF1744"))
+        }
+    }
+
+    private fun updateWriteSettingsStatusBanner() {
+        val canWrite = DpiSensitivityEngine.canWriteSystemSettings(this)
+        if (canWrite) {
+            tvWriteSettingsStatus.text = "● System Sensitivity Permission: GRANTED"
+            tvWriteSettingsStatus.setTextColor(Color.parseColor("#00E676"))
+        } else {
+            tvWriteSettingsStatus.text = "● System Sensitivity Permission: NOT GRANTED (Tap below)"
+            tvWriteSettingsStatus.setTextColor(Color.parseColor("#FF1744"))
         }
     }
 
